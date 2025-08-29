@@ -4,7 +4,11 @@ const router = express.Router();
 // Client dashboard route
 router.get('/:id', (req, res) => {
     const clientId = req.params.id;
-    res.render('client/dashboard', { title: `Client ${clientId} Dashboard`, clientId: clientId });
+    res.render('client/dashboard', { 
+        title: `Client ${clientId} Dashboard`, 
+        clientId: clientId,
+        layout: 'layouts/client-layout'
+    });
 });
 
 module.exports = router;

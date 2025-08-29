@@ -1,7 +1,33 @@
-<%- include('../partials/header') %>
+<section id="credentials" class="dashboard-section">
+    <h2>Enter Platform Credentials</h2>
+    <form id="credentials-form">
+        <label for="platform">Platform:</label>
+        <input type="text" id="platform" name="platform" placeholder="e.g. LinkedIn" required>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Save Credentials</button>
+    </form>
+</section>
 
-<div class="container">
-    <h1>Client <%= clientId %> Dashboard</h1>
-</div>
+<section id="upload" class="dashboard-section">
+    <h2>Upload CSV</h2>
+    <form id="csv-upload-form" enctype="multipart/form-data">
+        <input type="file" name="csvfile" accept=".csv" required>
+        <button type="submit">Upload</button>
+    </form>
+</section>
 
-<%- include('../partials/footer') %>
+<section id="note" class="dashboard-section">
+    <h2>Note</h2>
+    <textarea id="client-note" name="note" rows="4" placeholder="Enter your note or instructions..."></textarea>
+    <button id="save-note">Save Note</button>
+</section>
+
+<section id="activity" class="dashboard-section">
+    <h2>PhantomBuster Activity</h2>
+    <div id="activity-window">
+        <p>Activity feed will appear here...</p>
+    </div>
+</section>
