@@ -7,7 +7,8 @@ router.get('/:id', (req, res) => {
     res.render('client/dashboard', { 
         title: `Client ${clientId} Dashboard`, 
         clientId: clientId,
-        layout: 'layouts/client-layout'
+        layout: 'layouts/client-layout',
+        isDashboard: true
     });
 });
 

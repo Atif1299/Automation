@@ -8,16 +8,17 @@ body {
 .dashboard-container {
     display: flex;
     height: 100vh;
+    padding-top: 80px; /* Account for existing header height */
 }
 .sidebar {
     width: 220px;
     background: #222d32;
     color: #fff;
     padding-top: 30px;
-    height: 100vh;
+    height: calc(100vh - 80px);
     position: fixed;
     left: 0;
-    top: 0;
+    top: 80px;
     overflow-y: auto;
 }
 .sidebar ul {
@@ -54,7 +55,7 @@ body {
     padding: 40px;
     background: #fff;
     margin-left: 220px;
-    height: 100vh;
+    height: calc(100vh - 80px);
     overflow-y: auto;
 }
 .dashboard-section {
