@@ -1,19 +1,32 @@
-// Professional Animation Library
-class ProfessionalAnimations {
+class App {
     constructor() {
+        this.cardData = [
+            {
+                title: "Premium Quality Lists",
+                details: "Access our meticulously curated LinkedIn prospect lists with 95%+ accuracy. Each profile is verified and enriched with comprehensive data including job titles, company information, and contact preferences. Our advanced filtering ensures you connect with decision-makers who are genuinely interested in your solutions, dramatically improving your conversion rates and ROI."
+            },
+            {
+                title: "AI-Powered Automation",
+                details: "Leverage cutting-edge artificial intelligence to automate your LinkedIn outreach while maintaining authentic, personalized communication. Our smart algorithms analyze prospect behavior, optimize message timing, and adapt conversation flows for maximum engagement. Experience the perfect balance of efficiency and personalization that converts 3x better than traditional approaches."
+            },
+            {
+                title: "Rich Data Insights",
+                details: "Unlock comprehensive contact profiles with verified emails, direct phone numbers, social media handles, and detailed company insights. Our proprietary data enrichment technology aggregates information from 200+ sources, ensuring 90%+ accuracy. Get real-time updates on job changes, company news, and engagement signals to time your outreach perfectly."
+            },
+            {
+                title: "Transparent Pricing",
+                details: "Enjoy crystal-clear pricing with no hidden fees, setup costs, or long-term contracts. Our flexible plans scale with your business needs, from startups to enterprises. Every package includes dedicated support, detailed analytics, and performance guarantees. Experience maximum ROI with pricing that grows with your success, not against it."
+            }
+        ];
         this.init();
     }
 
     init() {
         this.setupScrollAnimations();
-        this.setupParallaxEffects();
         this.setupSmoothScrolling();
-        this.setupTypewriterEffect();
-        this.setupCounterAnimations();
-        this.setupMagneticButtons();
+        this.setupCardClickHandlers();
     }
 
-    // Intersection Observer for scroll animations
     setupScrollAnimations() {
         const observerOptions = {
             threshold: 0.1,
@@ -28,26 +41,11 @@ class ProfessionalAnimations {
             });
         }, observerOptions);
 
-        // Observe elements for animation
         document.querySelectorAll('.feature, .quote').forEach(el => {
             observer.observe(el);
         });
     }
 
-    // Parallax scrolling effects
-    setupParallaxEffects() {
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const rate = scrolled * -0.5;
-            
-            const hero = document.querySelector('.hero::before');
-            if (hero) {
-                hero.style.transform = `translateY(${rate}px)`;
-            }
-        });
-    }
-
-    // Smooth scrolling for internal links
     setupSmoothScrolling() {
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -63,256 +61,51 @@ class ProfessionalAnimations {
         });
     }
 
-    // Typewriter effect for hero text
-    setupTypewriterEffect() {
-        const heroTitle = document.querySelector('.hero h1');
-        if (heroTitle) {
-            const text = heroTitle.textContent;
-            heroTitle.textContent = '';
-            heroTitle.style.borderRight = '2px solid';
-            
-            let i = 0;
-            const typeWriter = () => {
-                if (i < text.length) {
-                    heroTitle.textContent += text.charAt(i);
-                    i++;
-                    setTimeout(typeWriter, 50);
-                } else {
-                    heroTitle.style.borderRight = 'none';
-                }
-            };
-            
-            setTimeout(typeWriter, 1000);
-        }
-    }
-
-    // Animated counters
-    setupCounterAnimations() {
-        const counters = document.querySelectorAll('[data-count]');
-        
-        const animateCounter = (counter) => {
-            const target = parseInt(counter.getAttribute('data-count'));
-            const duration = 2000;
-            const step = target / (duration / 16);
-            let current = 0;
-            
-            const timer = setInterval(() => {
-                current += step;
-                counter.textContent = Math.floor(current);
-                
-                if (current >= target) {
-                    counter.textContent = target;
-                    clearInterval(timer);
-                }
-            }, 16);
-        };
-
-        const counterObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    animateCounter(entry.target);
-                    counterObserver.unobserve(entry.target);
-                }
-            });
-        });
-
-        counters.forEach(counter => counterObserver.observe(counter));
-    }
-
-    // Magnetic button effects
-    setupMagneticButtons() {
-        const buttons = document.querySelectorAll('.cta-button, .nav-links a');
-        
-        buttons.forEach(button => {
-            button.addEventListener('mousemove', (e) => {
-                const rect = button.getBoundingClientRect();
-                const x = e.clientX - rect.left - rect.width / 2;
-                const y = e.clientY - rect.top - rect.height / 2;
-                
-                button.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
-            });
-            
-            button.addEventListener('mouseleave', () => {
-                button.style.transform = 'translate(0, 0)';
+    setupCardClickHandlers() {
+        const cardButtons = document.querySelectorAll('.card-btn');
+        cardButtons.forEach((btn, index) => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openModal(index);
             });
         });
     }
-}
 
-// Particle system for background
-class ParticleSystem {
-    constructor(container) {
-        this.container = container;
-        this.particles = [];
-        this.canvas = document.createElement('canvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.setupCanvas();
-        this.createParticles();
-        this.animate();
-    }
-
-    setupCanvas() {
-        this.canvas.style.position = 'absolute';
-        this.canvas.style.top = '0';
-        this.canvas.style.left = '0';
-        this.canvas.style.pointerEvents = 'none';
-        this.canvas.style.zIndex = '-1';
-        this.container.appendChild(this.canvas);
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-    }
-
-    resize() {
-        this.canvas.width = this.container.offsetWidth;
-        this.canvas.height = this.container.offsetHeight;
-    }
-
-    createParticles() {
-        for (let i = 0; i < 50; i++) {
-            this.particles.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height,
-                size: Math.random() * 3 + 1,
-                speedX: (Math.random() - 0.5) * 0.5,
-                speedY: (Math.random() - 0.5) * 0.5,
-                opacity: Math.random() * 0.5 + 0.1
-            });
-        }
-    }
-
-    animate() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        this.particles.forEach(particle => {
-            particle.x += particle.speedX;
-            particle.y += particle.speedY;
-            
-            if (particle.x > this.canvas.width) particle.x = 0;
-            if (particle.x < 0) particle.x = this.canvas.width;
-            if (particle.y > this.canvas.height) particle.y = 0;
-            if (particle.y < 0) particle.y = this.canvas.height;
-            
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fillStyle = `rgba(37, 99, 235, ${particle.opacity})`;
-            this.ctx.fill();
-        });
-        
-        requestAnimationFrame(() => this.animate());
-    }
-}
-
-// Loading screen
-class LoadingScreen {
-    constructor() {
-        this.createLoadingScreen();
-    }
-
-    createLoadingScreen() {
-        const loader = document.createElement('div');
-        loader.className = 'page-loader';
-        loader.innerHTML = `
-            <div class="loader-content">
-                <div class="loader-spinner"></div>
-                <p>Loading...</p>
+    openModal(cardIndex) {
+        const cardData = this.cardData[cardIndex];
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>${cardData.title}</h3>
+                <p>${cardData.details}</p>
+                <button class="close-btn">Close</button>
             </div>
         `;
-        
-        const styles = `
-            .page-loader {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 9999;
-                transition: opacity 0.5s ease;
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeModal(modal);
             }
-            
-            .loader-content {
-                text-align: center;
-                color: white;
-            }
-            
-            .loader-spinner {
-                width: 50px;
-                height: 50px;
-                border: 4px solid rgba(0, 212, 255, 0.2);
-                border-top: 4px solid #00d4ff;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                margin: 0 auto 20px;
-                box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-            }
-            
-            .loader-content p {
-                font-family: 'Poppins', sans-serif;
-                font-size: 18px;
-                font-weight: 500;
-                color: #e6edf3;
-                margin: 0;
-                letter-spacing: 0.5px;
-            }
-        `;
-        
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = styles;
-        document.head.appendChild(styleSheet);
-        document.body.appendChild(loader);
-        
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                loader.style.opacity = '0';
-                setTimeout(() => {
-                    loader.remove();
-                }, 500);
-            }, 1000);
         });
+
+        modal.querySelector('.close-btn').addEventListener('click', () => {
+            this.closeModal(modal);
+        });
+
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeModal(modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = 'auto';
+        }, 300);
     }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new LoadingScreen();
-    new ProfessionalAnimations();
-    
-    // Add particle system to hero section
-    const hero = document.querySelector('.hero');
-    if (hero) {
-        new ParticleSystem(hero);
-    }
+    new App();
 });
-
-// Performance optimization: Debounce scroll events
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Smooth reveal animations
-const revealElements = () => {
-    const reveals = document.querySelectorAll('.reveal');
-    
-    reveals.forEach(element => {
-        const windowHeight = window.innerHeight;
-        const elementTop = element.getBoundingClientRect().top;
-        const elementVisible = 150;
-        
-        if (elementTop < windowHeight - elementVisible) {
-            element.classList.add('active');
-        }
-    });
-};
-
-window.addEventListener('scroll', debounce(revealElements, 10));

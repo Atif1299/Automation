@@ -1,7 +1,81 @@
-<%- include('../partials/header') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/effects.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">LinkedIn Automation</a>
+            <ul class="nav-links">
+                <li><a href="/admin">Admin</a></li>
+                <li><a href="/client/1">Client</a></li>
+            </ul>
+        </div>
+    </nav>
+
+<div class="admin-bar">
+    <div class="container">
+        <div class="admin-info">
+            <span>👤 Admin: <%= adminEmail %></span>
+        </div>
+        <div class="admin-logout">
+            <a href="/admin/logout" class="logout-link">Logout</a>
+        </div>
+    </div>
+</div>
 
 <div class="container">
-    <h1>Admin Dashboard</h1>
+    <div class="admin-content">
+        <h1>Admin Dashboard</h1>
+        <p>Manage your LinkedIn automation platform</p>
+        
+        <div class="admin-sections">
+            <div class="admin-section">
+                <h3>System Overview</h3>
+                <div class="simple-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Status:</span>
+                        <span class="stat-value">Active</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Users:</span>
+                        <span class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Campaigns:</span>
+                        <span class="stat-value">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="admin-section">
+                <h3>Quick Actions</h3>
+                <div class="action-list">
+                    <button class="simple-btn">View Users</button>
+                    <button class="simple-btn">Manage Campaigns</button>
+                    <button class="simple-btn">System Settings</button>
+                    <button class="simple-btn">View Logs</button>
+                </div>
+            </div>
+            
+            <div class="admin-section">
+                <h3>Recent Activity</h3>
+                <div class="activity-list">
+                    <p class="no-activity">No recent activity</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <%- include('../partials/footer') %>
