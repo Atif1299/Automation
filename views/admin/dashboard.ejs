@@ -20,18 +20,35 @@
                     <path d="M12 2L2 7V10C2 16 6 20.5 12 22C18 20.5 22 16 22 10V7L12 2Z" stroke="currentColor" stroke-width="2"/>
                 </svg>
                 Admin Dashboard
+                <% if (typeof databaseConnected !== 'undefined') { %>
+                    <span class="db-status <%= databaseConnected ? 'connected' : 'disconnected' %>">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                        </svg>
+                        <%= databaseConnected ? 'DB Connected' : 'DB Offline' %>
+                    </span>
+                <% } %>
             </h1>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="error-banner">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                        <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <%= error %>
+                </div>
+            <% } %>
             <div class="admin-stats">
                 <div class="stat-card">
-                    <span class="stat-number">24</span>
+                    <span class="stat-number"><%= stats.activeClients %></span>
                     <span class="stat-label">Active Clients</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-number">156</span>
+                    <span class="stat-number"><%= stats.totalMessages %></span>
                     <span class="stat-label">Total Messages</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-number">8</span>
+                    <span class="stat-number"><%= stats.newSignups %></span>
                     <span class="stat-label">New Signups</span>
                 </div>
             </div>
@@ -101,93 +118,50 @@
             </div>
             
             <div class="clients-grid">
-                <!-- Sample Client Cards -->
-                <div class="client-card">
-                    <div class="client-header">
-                        <div class="client-avatar">JD</div>
-                        <div class="client-info">
-                            <h3>John Doe</h3>
-                            <span class="client-email">john.doe@email.com</span>
-                            <span class="client-status active">Active</span>
+                <% if (clients && clients.length > 0) { %>
+                    <% clients.forEach((client, index) => { %>
+                        <div class="client-card">
+                            <div class="client-header">
+                                <div class="client-avatar">
+                                    <%= client.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+                                </div>
+                                <div class="client-info">
+                                    <h3><%= client.name %></h3>
+                                    <span class="client-email"><%= client.email %></span>
+                                    <span class="client-status <%= client.status %>"><%= client.status.charAt(0).toUpperCase() + client.status.slice(1) %></span>
+                                </div>
+                                <div class="client-actions">
+                                    <button class="action-btn view-btn" onclick="viewClientDetails('<%= client.clientId %>')">View</button>
+                                    <button class="action-btn message-btn" onclick="openClientChat('<%= client.clientId %>')">Message</button>
+                                </div>
+                            </div>
+                            <div class="client-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Platforms</span>
+                                    <span class="stat-value"><%= client.credentials?.length || 0 %></span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Files</span>
+                                    <span class="stat-value"><%= client.uploadedFiles?.length || 0 %></span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Last Active</span>
+                                    <span class="stat-value">
+                                        <% if (client.lastLogin) { %>
+                                            <%= new Date(client.lastLogin).toLocaleDateString() %>
+                                        <% } else { %>
+                                            Never
+                                        <% } %>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="client-actions">
-                            <button class="action-btn view-btn" onclick="viewClientDetails('1')">View</button>
-                            <button class="action-btn message-btn" onclick="openClientChat('1')">Message</button>
-                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="no-clients">
+                        <p>No clients found. Clients will appear here when they sign up.</p>
                     </div>
-                    <div class="client-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Platforms</span>
-                            <span class="stat-value">3</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Files</span>
-                            <span class="stat-value">12</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Last Active</span>
-                            <span class="stat-value">2 hours ago</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="client-card">
-                    <div class="client-header">
-                        <div class="client-avatar">AS</div>
-                        <div class="client-info">
-                            <h3>Alice Smith</h3>
-                            <span class="client-email">alice.smith@email.com</span>
-                            <span class="client-status active">Active</span>
-                        </div>
-                        <div class="client-actions">
-                            <button class="action-btn view-btn" onclick="viewClientDetails('2')">View</button>
-                            <button class="action-btn message-btn" onclick="openClientChat('2')">Message</button>
-                        </div>
-                    </div>
-                    <div class="client-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Platforms</span>
-                            <span class="stat-value">5</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Files</span>
-                            <span class="stat-value">8</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Last Active</span>
-                            <span class="stat-value">1 day ago</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="client-card">
-                    <div class="client-header">
-                        <div class="client-avatar">MB</div>
-                        <div class="client-info">
-                            <h3>Mike Brown</h3>
-                            <span class="client-email">mike.brown@email.com</span>
-                            <span class="client-status inactive">Inactive</span>
-                        </div>
-                        <div class="client-actions">
-                            <button class="action-btn view-btn" onclick="viewClientDetails('3')">View</button>
-                            <button class="action-btn message-btn" onclick="openClientChat('3')">Message</button>
-                        </div>
-                    </div>
-                    <div class="client-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Platforms</span>
-                            <span class="stat-value">2</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Files</span>
-                            <span class="stat-value">4</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Last Active</span>
-                            <span class="stat-value">1 week ago</span>
-                        </div>
-                    </div>
-                </div>
+                <% } %>
             </div>
         </div>
 
@@ -200,68 +174,76 @@
             
             <div class="messages-layout">
                 <div class="clients-list">
-                    <div class="client-item active" data-client-id="1" onclick="selectClient('1')">
-                        <div class="client-avatar">JD</div>
-                        <div class="client-details">
-                            <h4>John Doe</h4>
-                            <p class="last-message">Platform setup completed successfully...</p>
-                            <span class="message-time">2 hours ago</span>
+                    <% if (clients && clients.length > 0) { %>
+                        <% clients.forEach((client, index) => { %>
+                            <div class="client-item <%= index === 0 ? 'active' : '' %>" data-client-id="<%= client.clientId %>" onclick="selectClient('<%= client.clientId %>')">
+                                <div class="client-avatar">
+                                    <%= client.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+                                </div>
+                                <div class="client-details">
+                                    <h4><%= client.name %></h4>
+                                    <p class="last-message">
+                                        <% if (client.activityLogs && client.activityLogs.length > 0) { %>
+                                            <%= client.activityLogs[client.activityLogs.length - 1].message.substring(0, 50) %>...
+                                        <% } else { %>
+                                            No messages yet
+                                        <% } %>
+                                    </p>
+                                    <span class="message-time">
+                                        <% if (client.activityLogs && client.activityLogs.length > 0) { %>
+                                            <%= new Date(client.activityLogs[client.activityLogs.length - 1].timestamp).toLocaleDateString() %>
+                                        <% } else { %>
+                                            --
+                                        <% } %>
+                                    </span>
+                                </div>
+                                <% if (client.activityLogs && client.activityLogs.filter(log => log.type === 'info').length > 0) { %>
+                                    <div class="unread-badge"><%= client.activityLogs.filter(log => log.type === 'info').length %></div>
+                                <% } %>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="no-clients-message">
+                            <p>No clients available for messaging</p>
                         </div>
-                        <div class="unread-badge">3</div>
-                    </div>
-                    
-                    <div class="client-item" data-client-id="2" onclick="selectClient('2')">
-                        <div class="client-avatar">AS</div>
-                        <div class="client-details">
-                            <h4>Alice Smith</h4>
-                            <p class="last-message">Need help with file upload...</p>
-                            <span class="message-time">1 day ago</span>
-                        </div>
-                    </div>
-                    
-                    <div class="client-item" data-client-id="3" onclick="selectClient('3')">
-                        <div class="client-avatar">MB</div>
-                        <div class="client-details">
-                            <h4>Mike Brown</h4>
-                            <p class="last-message">Thank you for the update!</p>
-                            <span class="message-time">3 days ago</span>
-                        </div>
-                    </div>
+                    <% } %>
                 </div>
                 
                 <div class="chat-area">
-                    <div class="chat-header">
-                        <div class="chat-client-info">
-                            <div class="client-avatar">JD</div>
-                            <div>
-                                <h3>John Doe</h3>
-                                <span class="client-status">Online</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="chat-messages">
-                        <div class="message client-message">
-                            <div class="message-content">
-                                <p>Hi, I've completed the platform setup but I'm having trouble with the credentials section.</p>
-                                <span class="message-time">2:30 PM</span>
+                    <% if (clients && clients.length > 0) { %>
+                        <div class="chat-header">
+                            <div class="chat-client-info">
+                                <div class="client-avatar">
+                                    <%= clients[0].name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+                                </div>
+                                <div>
+                                    <h3><%= clients[0].name %></h3>
+                                    <span class="client-status"><%= clients[0].status === 'active' ? 'Online' : 'Offline' %></span>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="message admin-message">
-                            <div class="message-content">
-                                <p>I can see your setup. Let me help you with the credentials. I'll update your configuration now.</p>
-                                <span class="message-time">2:35 PM</span>
-                            </div>
+                        <div class="chat-messages" id="chat-messages">
+                            <% if (clients[0].activityLogs && clients[0].activityLogs.length > 0) { %>
+                                <% clients[0].activityLogs.slice(-5).forEach(log => { %>
+                                    <div class="message admin-message">
+                                        <div class="message-content">
+                                            <p><%= log.message %></p>
+                                            <span class="message-time"><%= new Date(log.timestamp).toLocaleTimeString() %></span>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="no-messages">
+                                    <p>No conversation history. Start by sending a message below.</p>
+                                </div>
+                            <% } %>
                         </div>
-                        
-                        <div class="message client-message">
-                            <div class="message-content">
-                                <p>Thank you! That worked perfectly. The automation is running smoothly now.</p>
-                                <span class="message-time">2:45 PM</span>
-                            </div>
+                    <% } else { %>
+                        <div class="no-client-selected">
+                            <p>No clients available to chat with</p>
                         </div>
-                    </div>
+                    <% } %>
                     
                     <div class="chat-input">
                         <input type="text" placeholder="Type your message..." class="message-input">
@@ -280,11 +262,13 @@
         <div class="tab-content" id="monitoring">
             <div class="content-header">
                 <h2>Activity Monitoring Control</h2>
-                <select class="client-selector">
-                    <option>Select Client</option>
-                    <option value="1">John Doe</option>
-                    <option value="2">Alice Smith</option>
-                    <option value="3">Mike Brown</option>
+                <select class="client-selector" id="activity-client-selector">
+                    <option value="">Select Client</option>
+                    <% if (clients && clients.length > 0) { %>
+                        <% clients.forEach(client => { %>
+                            <option value="<%= client.clientId %>"><%= client.name %></option>
+                        <% }); %>
+                    <% } %>
                 </select>
             </div>
             
@@ -325,22 +309,44 @@
                 <div class="activity-preview">
                     <h3>Live Preview - Client View</h3>
                     <div class="monitor-preview">
-                        <div class="activity-item">
-                            <div class="activity-icon running">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                                    <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2"/>
-                                </svg>
-                            </div>
-                            <div class="activity-details">
-                                <h4>Automation Process</h4>
-                                <p>Platform integration in progress. Estimated completion in 2 hours.</p>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 75%"></div>
+                        <% if (clients && clients.length > 0 && clients[0].activityLogs && clients[0].activityLogs.length > 0) { %>
+                            <% const latestActivity = clients[0].activityLogs[clients[0].activityLogs.length - 1]; %>
+                            <div class="activity-item">
+                                <div class="activity-icon <%= latestActivity.status || 'running' %>">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                        <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
                                 </div>
-                                <span class="activity-time">Updated 5 minutes ago</span>
+                                <div class="activity-details">
+                                    <h4><%= latestActivity.activity %></h4>
+                                    <p><%= latestActivity.details || 'Activity in progress' %></p>
+                                    <% if (latestActivity.platform) { %>
+                                        <p><strong>Platform:</strong> <%= latestActivity.platform %></p>
+                                    <% } %>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 75%"></div>
+                                    </div>
+                                    <span class="activity-time">Updated <%= new Date(latestActivity.timestamp).toLocaleString() %></span>
+                                </div>
                             </div>
-                        </div>
+                        <% } else { %>
+                            <div class="activity-item">
+                                <div class="activity-icon pending">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                </div>
+                                <div class="activity-details">
+                                    <h4>No Active Process</h4>
+                                    <p>No automation processes are currently running for this client.</p>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span class="activity-time">Waiting for activity</span>
+                                </div>
+                            </div>
+                        <% } %>
                     </div>
                 </div>
             </div>
@@ -350,74 +356,45 @@
         <div class="tab-content" id="files">
             <div class="content-header">
                 <h2>Client Files Management</h2>
-                <select class="client-selector">
-                    <option>Select Client</option>
-                    <option value="1">John Doe</option>
-                    <option value="2">Alice Smith</option>
-                    <option value="3">Mike Brown</option>
+                <select class="client-selector" id="files-client-selector">
+                    <option value="">Select Client</option>
+                    <% if (clients && clients.length > 0) { %>
+                        <% clients.forEach(client => { %>
+                            <option value="<%= client.clientId %>"><%= client.name %></option>
+                        <% }); %>
+                    <% } %>
                 </select>
             </div>
             
-            <div class="files-grid">
-                <div class="file-category">
-                    <h3>Configuration Files</h3>
-                    <div class="files-list">
-                        <div class="file-item">
-                            <div class="file-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
-                                </svg>
-                            </div>
-                            <div class="file-info">
-                                <h4>automation_config.json</h4>
-                                <p>2.4 KB • Uploaded 2 days ago</p>
-                            </div>
-                            <div class="file-actions">
-                                <button class="action-btn">View</button>
-                                <button class="action-btn">Download</button>
-                            </div>
-                        </div>
-                        
-                        <div class="file-item">
-                            <div class="file-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
-                                </svg>
-                            </div>
-                            <div class="file-info">
-                                <h4>platform_settings.xml</h4>
-                                <p>1.8 KB • Uploaded 1 week ago</p>
-                            </div>
-                            <div class="file-actions">
-                                <button class="action-btn">View</button>
-                                <button class="action-btn">Download</button>
-                            </div>
+            <div class="files-grid" id="files-grid">
+                <% if (clients && clients.length > 0 && clients[0].uploadedFiles && clients[0].uploadedFiles.length > 0) { %>
+                    <div class="file-category">
+                        <h3>Uploaded Files</h3>
+                        <div class="files-list">
+                            <% clients[0].uploadedFiles.forEach(file => { %>
+                                <div class="file-item">
+                                    <div class="file-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="file-info">
+                                        <h4><%= file.originalName %></h4>
+                                        <p><%= (file.fileSize / 1024).toFixed(2) %> KB • <%= new Date(file.uploadDate).toLocaleDateString() %></p>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="action-btn">View</button>
+                                        <button class="action-btn">Download</button>
+                                    </div>
+                                </div>
+                            <% }); %>
                         </div>
                     </div>
-                </div>
-                
-                <div class="file-category">
-                    <h3>Uploaded Documents</h3>
-                    <div class="files-list">
-                        <div class="file-item">
-                            <div class="file-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="2"/>
-                                    <polyline points="21,15 16,10 5,21" stroke="currentColor" stroke-width="2"/>
-                                </svg>
-                            </div>
-                            <div class="file-info">
-                                <h4>business_logo.png</h4>
-                                <p>156 KB • Uploaded 3 days ago</p>
-                            </div>
-                            <div class="file-actions">
-                                <button class="action-btn">View</button>
-                                <button class="action-btn">Download</button>
-                            </div>
-                        </div>
+                <% } else { %>
+                    <div class="no-files">
+                        <p>No files uploaded yet. Files will appear here when clients upload them.</p>
                     </div>
-                </div>
+                <% } %>
             </div>
         </div>
     </div>

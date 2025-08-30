@@ -170,9 +170,7 @@ const clientSchema = new mongoose.Schema({
     versionKey: false
 });
 
-// Index for better query performance
-clientSchema.index({ clientId: 1 });
-clientSchema.index({ email: 1 });
+// Index for better query performance (only for fields that don't have unique: true)
 clientSchema.index({ status: 1 });
 clientSchema.index({ 'credentials.platform': 1 });
 
