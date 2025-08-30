@@ -1,8 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* CSS Custom Properties for Professional Dark Theme */
+/* CSS Custom Properties for Enhanced Professional Dark Theme */
 :root {
     --primary-color: #00d4ff;
+    --primary-light: #33e1ff;
     --primary-dark: #0099cc;
     --secondary-color: #ff6b6b;
     --accent-color: #4ecdc4;
@@ -36,6 +37,7 @@
     --gradient-secondary: linear-gradient(135deg, #ff6b6b 0%, #00d4ff 100%);
     --gradient-bg: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
     --gradient-card: linear-gradient(145deg, #1c2128 0%, #161b22 100%);
+    --gradient-accent: linear-gradient(135deg, #00d4ff 0%, #4ecdc4 50%, #0099cc 100%);
     
     --border-radius-sm: 6px;
     --border-radius-md: 8px;
@@ -45,6 +47,9 @@
     --transition-fast: 0.15s ease;
     --transition-normal: 0.3s ease;
     --transition-slow: 0.5s ease;
+    
+    --section-padding: 100px 0;
+    --container-padding: 0 24px;
 }
 
 * {
@@ -516,7 +521,7 @@ nav .nav-links a:active {
     transform: rotate(180deg);
 }
 
-/* Clean Responsive Design for Professional Navigation */
+/* Comprehensive Responsive Design */
 @media (max-width: 768px) {
     .container {
         padding: 0 16px;
@@ -556,11 +561,11 @@ nav .nav-links a:active {
     }
     
     .floating-shape {
-        display: none; /* Hide some shapes on mobile for cleaner look */
+        display: none;
     }
     
     .shape-1, .shape-3, .shape-5 {
-        display: flex; /* Show only 3 shapes on mobile */
+        display: flex;
     }
     
     .shape-1 {
@@ -613,6 +618,52 @@ nav .nav-links a:active {
         line-height: 1.5;
         color: rgba(255, 255, 255, 0.7);
     }
+    
+    /* AI Agents and Workflow Responsive */
+    .floating-agents {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .agent-card {
+        padding: 25px 20px;
+    }
+    
+    .agent-header {
+        margin-bottom: 15px;
+    }
+    
+    .agent-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .agent-card h3 {
+        font-size: 1.2rem;
+    }
+    
+    .workflow-steps {
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    .workflow-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .workflow-quote {
+        padding: 30px 20px;
+    }
+    
+    .terminal-window {
+        margin: 0 10px;
+    }
+    
+    .ai-agents-section h2,
+    .workflow-section h2 {
+        font-size: 2rem;
+    }
+}
     
     .hero {
         padding: 100px 0 80px;
@@ -699,7 +750,7 @@ nav .nav-links a:active {
     .quote p::after {
         right: 10px;
     }
-}
+
 
 @media (max-width: 480px) {
     .hero h1 {
@@ -838,9 +889,15 @@ body {
 
 /* Floating AI Agent Cards */
 .ai-agents-section {
-    padding: 80px 20px;
+    padding: var(--section-padding);
     text-align: center;
     background: var(--bg-primary);
+}
+
+.ai-agents-section .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--container-padding);
 }
 
 .ai-agents-section h2 {
@@ -916,7 +973,6 @@ body {
 }
 
 .agent-avatar {
-    font-size: 2rem;
     background: var(--bg-tertiary);
     border: 2px solid var(--border-light);
     border-radius: var(--border-radius-md);
@@ -928,14 +984,37 @@ body {
     transition: all var(--transition-normal);
 }
 
+.agent-avatar svg {
+    width: 24px;
+    height: 24px;
+    color: var(--primary-color);
+    filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.3));
+}
+
 .agent-card:hover .agent-avatar {
     border-color: var(--primary-color);
     box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+    background: rgba(0, 212, 255, 0.1);
+}
+
+.agent-card:hover .agent-avatar svg {
+    color: #ffffff;
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5));
 }
 
 .capability-icon {
-    font-size: 1.5rem;
-    opacity: 0.4;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    color: var(--text-muted);
+}
+
+.capability-icon svg {
+    width: 20px;
+    height: 20px;
     color: var(--text-muted);
 }
 
@@ -962,20 +1041,22 @@ body {
 }
 
 .feature-tag {
-    background: var(--bg-tertiary);
+    background: rgba(0, 212, 255, 0.08);
     color: var(--text-light);
-    padding: 4px 12px;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: var(--border-radius-md);
+    font-size: 0.8rem;
     font-weight: 500;
-    border: 1px solid var(--border-medium);
+    border: 1px solid rgba(0, 212, 255, 0.15);
     transition: all var(--transition-fast);
+    backdrop-filter: blur(4px);
 }
 
 .feature-tag:hover {
-    background: var(--bg-secondary);
+    background: rgba(0, 212, 255, 0.15);
     color: var(--primary-color);
-    border-color: var(--primary-color);
+    border-color: rgba(0, 212, 255, 0.3);
+    transform: translateY(-1px);
 }
 
 .agent-status {
@@ -1003,8 +1084,14 @@ body {
 
 /* Workflow Section */
 .workflow-section {
-    padding: 80px 20px;
+    padding: var(--section-padding);
     background: var(--bg-primary);
+}
+
+.workflow-section .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--container-padding);
 }
 
 .workflow-section h2 {
@@ -1048,9 +1135,33 @@ body {
 }
 
 .step-icon {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.3));
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 15px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 212, 255, 0.1);
+    border-radius: 50%;
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.step-icon svg {
+    width: 28px;
+    height: 28px;
+    color: var(--primary-color);
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
+}
+
+.workflow-step:hover .step-icon {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.workflow-step:hover .step-icon svg {
+    color: #ffffff;
 }
 
 .workflow-step h3 {
@@ -1099,7 +1210,7 @@ body {
 
 /* Interactive Terminal */
 .terminal-section {
-    padding: 80px 20px;
+    padding: var(--section-padding);
     background: var(--bg-primary);
     display: flex;
     justify-content: center;
@@ -1447,52 +1558,4 @@ body {
 .ripple:active::before {
     width: 300px;
     height: 300px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .floating-agents {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    
-    .agent-card {
-        padding: 25px 20px;
-    }
-    
-    .agent-header {
-        margin-bottom: 15px;
-    }
-    
-    .agent-avatar {
-        width: 45px;
-        height: 45px;
-        font-size: 1.8rem;
-    }
-    
-    .agent-card h3 {
-        font-size: 1.2rem;
-    }
-    
-    .workflow-steps {
-        flex-direction: column;
-        gap: 30px;
-    }
-    
-    .workflow-arrow {
-        transform: rotate(90deg);
-    }
-    
-    .workflow-quote {
-        padding: 30px 20px;
-    }
-    
-    .terminal-window {
-        margin: 0 10px;
-    }
-    
-    .ai-agents-section h2,
-    .workflow-section h2 {
-        font-size: 2rem;
-    }
 }
