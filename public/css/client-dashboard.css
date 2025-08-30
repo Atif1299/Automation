@@ -620,25 +620,6 @@ body.dashboard-body {
     box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
 }
 
-.test-connection-btn {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: #fff;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-left: 12px;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
-}
-
-.test-connection-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-}
-
 /* File Upload */
 .upload-section {
     margin-bottom: 30px;

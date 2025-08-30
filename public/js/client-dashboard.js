@@ -121,27 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
     
-    // Test connection functionality
-    document.querySelector('.test-connection-btn').addEventListener('click', function() {
-        const platform = document.getElementById('platform').value;
-        const username = document.getElementById('username').value;
-        
-        if (!platform || !username) {
-            alert('Please fill in platform and username first');
-            return;
-        }
-        
-        this.textContent = 'Testing...';
-        this.disabled = true;
-        
-        // Simulate connection test
-        setTimeout(() => {
-            this.textContent = 'Connected ✓';
-            this.style.background = '#28a745';
-            addLogEntry('success', `Successfully connected to ${platform} for user: ${username}`);
-        }, 2000);
-    });
-    
     // Activity log functionality
     const logEntries = document.querySelectorAll('.log-entry');
     logEntries.forEach(entry => {
@@ -231,25 +210,164 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Form submissions
-    document.getElementById('save-credentials').addEventListener('click', function(e) {
+    document.getElementById('save-credentials').addEventListener('click', async function(e) {
         e.preventDefault();
-        addLogEntry('info', 'Credentials saved successfully');
-        // Switch to upload tab
-        document.querySelector('[data-tab="upload"]').click();
+        
+        // Get credential data
+        const credentialData = {
+            platform: document.getElementById('platform').value,
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+        };
+        
+        // Validate required fields
+        if (!credentialData.platform || !credentialData.username || !credentialData.password) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        try {
+            // Show loading state
+            this.textContent = 'Saving...';
+            this.disabled = true;
+            
+            // Get client ID from URL
+            const clientId = window.location.pathname.split('/')[2];
+            
+            // Send credentials to server
+            const response = await fetch(`/client/${clientId}/credentials`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(credentialData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                addLogEntry('success', `Credentials saved for ${credentialData.platform} - ${credentialData.username}`);
+                addLogEntry('info', 'Credentials forwarded to admin dashboard');
+                
+                // Reset form
+                document.getElementById('platform').value = '';
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                
+                // Switch to upload tab
+                document.querySelector('[data-tab="upload"]').click();
+            } else {
+                addLogEntry('error', result.error || 'Failed to save credentials');
+            }
+        } catch (error) {
+            console.error('Error saving credentials:', error);
+            addLogEntry('error', 'Network error while saving credentials');
+        } finally {
+            // Reset button state
+            this.textContent = 'Save & Continue';
+            this.disabled = false;
+        }
     });
     
-    document.getElementById('upload-file').addEventListener('click', function(e) {
+    document.getElementById('upload-file').addEventListener('click', async function(e) {
         e.preventDefault();
-        addLogEntry('info', 'File uploaded and validated');
-        // Switch to configuration tab
-        document.querySelector('[data-tab="note"]').click();
+        
+        const fileInput = document.getElementById('csvFile');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert('Please select a file first');
+            return;
+        }
+        
+        try {
+            // Show loading state
+            this.textContent = 'Uploading...';
+            this.disabled = true;
+            
+            // Get client ID from URL
+            const clientId = window.location.pathname.split('/')[2];
+            
+            // Send file info to server
+            const response = await fetch(`/client/${clientId}/upload`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                addLogEntry('info', 'File uploaded and validated');
+                // Switch to configuration tab
+                document.querySelector('[data-tab="note"]').click();
+            } else {
+                addLogEntry('error', result.error || 'Failed to upload file');
+            }
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            addLogEntry('error', 'Network error while uploading file');
+        } finally {
+            // Reset button state
+            this.textContent = 'Upload & Validate';
+            this.disabled = false;
+        }
     });
     
-    document.getElementById('save-config').addEventListener('click', function(e) {
+    document.getElementById('save-config').addEventListener('click', async function(e) {
         e.preventDefault();
-        addLogEntry('info', 'Configuration saved');
-        // Switch to activity tab
-        document.querySelector('[data-tab="activity"]').click();
+        
+        const configData = {
+            campaignName: document.getElementById('campaign-name').value,
+            automationType: document.getElementById('automation-type').value,
+            instructions: document.getElementById('client-note').value
+        };
+        
+        if (!configData.campaignName || !configData.automationType) {
+            alert('Please fill in campaign name and automation type');
+            return;
+        }
+        
+        try {
+            // Show loading state
+            this.textContent = 'Saving...';
+            this.disabled = true;
+            
+            // Get client ID from URL
+            const clientId = window.location.pathname.split('/')[2];
+            
+            // Send configuration to server
+            const response = await fetch(`/client/${clientId}/config`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(configData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                addLogEntry('info', 'Configuration saved');
+                // Switch to activity tab
+                document.querySelector('[data-tab="activity"]').click();
+            } else {
+                addLogEntry('error', result.error || 'Failed to save configuration');
+            }
+        } catch (error) {
+            console.error('Error saving configuration:', error);
+            addLogEntry('error', 'Network error while saving configuration');
+        } finally {
+            // Reset button state
+            this.textContent = 'Save Configuration';
+            this.disabled = false;
+        }
     });
     
     // Real-time updates simulation
