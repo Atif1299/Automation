@@ -1,0 +1,76 @@
+<div class="messages-container">
+    <div class="messages-header">
+        <h1>Admin Messages</h1>
+        <div class="messages-info">
+            <span class="online-status">Admin is online</span>
+        </div>
+    </div>
+
+    <div class="messages-content">
+        <div class="conversation-area">
+            <div class="messages-list" id="messages-list">
+                <!-- Messages will be loaded here -->
+                <% if (typeof client !== 'undefined' && client && client.activityLogs) { %>
+                    <% client.activityLogs.forEach(log => { %>
+                        <% if (log.type === 'admin_message') { %>
+                            <div class="message admin-message">
+                                <div class="message-avatar">
+                                    <div class="avatar admin-avatar">A</div>
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <span class="message-sender">Admin</span>
+                                        <span class="message-time"><%= new Date(log.timestamp).toLocaleString() %></span>
+                                    </div>
+                                    <div class="message-text">
+                                        <%= log.details %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } else if (log.type === 'client_message') { %>
+                            <div class="message client-message">
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <span class="message-sender">You</span>
+                                        <span class="message-time"><%= new Date(log.timestamp).toLocaleString() %></span>
+                                    </div>
+                                    <div class="message-text">
+                                        <%= log.details %>
+                                    </div>
+                                </div>
+                                <div class="message-avatar">
+                                    <div class="avatar client-avatar">C</div>
+                                </div>
+                            </div>
+                        <% } %>
+                    <% }); %>
+                <% } else { %>
+                    <div class="no-messages">
+                        <div class="no-messages-icon">💬</div>
+                        <h3>No messages yet</h3>
+                        <p>Start a conversation with the admin team</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="message-input-area">
+            <form class="message-form" id="message-form">
+                <div class="input-group">
+                    <textarea 
+                        id="message-input" 
+                        placeholder="Type your message to admin..." 
+                        rows="3" 
+                        required
+                    ></textarea>
+                    <button type="submit" class="send-button" id="send-message">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Send
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
