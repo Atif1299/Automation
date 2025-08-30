@@ -1,7 +1,8 @@
-<%- include('../partials/header') %>
+<%- include('../partials/dashboard-header') %>
     <div class="dashboard-container">
-        <nav class="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-header">
+                <a href="/" class="dashboard-logo">LinkedIn Automation</a>
                 <h3>Menu</h3>
             </div>
             <ul>
@@ -10,8 +11,15 @@
                 <li><a href="#note">Note</a></li>
                 <li><a href="#activity">Activity</a></li>
             </ul>
-        </nav>
+        </aside>
         <main class="main-content">
+            <div class="dashboard-topbar">
+                <h1>Client Dashboard</h1>
+                <div class="nav-links">
+                    <a href="/admin" class="nav-link">Admin</a>
+                    <a href="/" class="nav-link">Home</a>
+                </div>
+            </div>
             <%- body %>
         </main>
     </div>
