@@ -1,33 +1,135 @@
-<section id="credentials" class="dashboard-section">
-    <h2>Enter Platform Credentials</h2>
-    <form id="credentials-form">
-        <label for="platform">Platform:</label>
-        <input type="text" id="platform" name="platform" placeholder="e.g. LinkedIn" required>
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <button type="submit">Save Credentials</button>
-    </form>
-</section>
-
-<section id="upload" class="dashboard-section">
-    <h2>Upload CSV</h2>
-    <form id="csv-upload-form" enctype="multipart/form-data">
-        <input type="file" name="csvfile" accept=".csv" required>
-        <button type="submit">Upload</button>
-    </form>
-</section>
-
-<section id="note" class="dashboard-section">
-    <h2>Note</h2>
-    <textarea id="client-note" name="note" rows="4" placeholder="Enter your note or instructions..."></textarea>
-    <button id="save-note">Save Note</button>
-</section>
-
-<section id="activity" class="dashboard-section">
-    <h2>PhantomBuster Activity</h2>
-    <div id="activity-window">
-        <p>Activity feed will appear here...</p>
+<<!-- Tabbed Content -->
+<div class="tab-container">
+    <div class="tab-nav">
+        <button class="tab-btn active" data-tab="credentials"><span>Platform Setup</span></button>
+        <button class="tab-btn" data-tab="upload"><span>File Management</span></button>
+        <button class="tab-btn" data-tab="note"><span>Configuration</span></button>
+        <button class="tab-btn" data-tab="activity"><span>Activity Monitor</span></button>
     </div>
-</section>
+
+    <div class="tab-content active" id="credentials">
+        <div class="form-group">
+            <label for="platform">
+                Platform <span class="tooltip" data-tooltip="Select the platform you want to automate">ⓘ</span>
+            </label>
+            <select id="platform" name="platform" required>
+                <option value="">Select Platform</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="twitter">Twitter</option>
+                <option value="email">Email</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="username">
+                Username/Email <span class="tooltip" data-tooltip="Your login credentials for the selected platform">ⓘ</span>
+            </label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">
+                Password <span class="tooltip" data-tooltip="Your password (encrypted and stored securely)">ⓘ</span>
+            </label>
+            <input type="password" id="password" name="password" required>
+            <button type="button" class="test-connection-btn">Test Connection</button>
+        </div>
+        <button type="submit" class="btn-primary" id="save-credentials">Save & Continue</button>
+    </div>
+
+    <div class="tab-content" id="upload">
+        <div class="upload-section">
+            <div class="file-drop-zone" id="fileDropZone">
+                <div class="drop-icon">📁</div>
+                <p>Drag & Drop your CSV file here or <span class="browse-link">browse</span></p>
+                <input type="file" id="csvFile" accept=".csv" hidden>
+            </div>
+            <div class="file-info" id="fileInfo" style="display: none;">
+                <div class="file-details">
+                    <span class="file-name"></span>
+                    <span class="file-size"></span>
+                </div>
+                <div class="upload-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <span class="progress-text">0%</span>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary" id="upload-file">Upload & Validate</button>
+    </div>
+
+    <div class="tab-content" id="note">
+        <div class="form-group">
+            <label for="campaign-name">
+                Campaign Name <span class="tooltip" data-tooltip="Give your campaign a descriptive name">ⓘ</span>
+            </label>
+            <input type="text" id="campaign-name" name="campaign-name" placeholder="e.g., LinkedIn Outreach Q4 2025">
+        </div>
+        <div class="form-group">
+            <label for="automation-type">
+                Automation Type <span class="tooltip" data-tooltip="Choose the type of automation to run">ⓘ</span>
+            </label>
+            <select id="automation-type" name="automation-type">
+                <option value="enrichment">Contact Enrichment</option>
+                <option value="outreach">Automated Outreach</option>
+                <option value="scraping">Data Scraping</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="client-note">
+                Instructions & Notes <span class="tooltip" data-tooltip="Detailed instructions for the automation">ⓘ</span>
+            </label>
+            <textarea id="client-note" name="note" rows="4" placeholder="Enter your specific requirements, targeting criteria, or special instructions..."></textarea>
+        </div>
+        <button type="button" class="btn-primary" id="save-config">Save Configuration</button>
+    </div>
+
+    <div class="tab-content" id="activity">
+        <div class="activity-header">
+            <h3>Real-time Activity Monitor</h3>
+            <div class="activity-controls">
+                <select id="log-filter">
+                    <option value="all">All Logs</option>
+                    <option value="success">Success</option>
+                    <option value="error">Errors</option>
+                    <option value="info">Info</option>
+                </select>
+                <button class="btn-secondary" id="export-logs">Export Logs</button>
+                <button class="btn-secondary" id="clear-logs">Clear</button>
+            </div>
+        </div>
+        <div class="activity-window" id="activity-window">
+            <div class="log-entry success">
+                <div class="log-header">
+                    <span class="log-time">2025-08-30 10:30:15</span>
+                    <span class="log-type success">SUCCESS</span>
+                </div>
+                <div class="log-message">Connected to LinkedIn successfully</div>
+                <div class="log-details" style="display: none;">
+                    <pre>Authentication successful for user: john.doe@email.com
+Response time: 1.2s
+Session ID: abc123def456</pre>
+                </div>
+            </div>
+            <div class="log-entry info">
+                <div class="log-header">
+                    <span class="log-time">2025-08-30 10:31:22</span>
+                    <span class="log-type info">INFO</span>
+                </div>
+                <div class="log-message">Processing CSV file: contacts.csv (245 rows)</div>
+            </div>
+            <div class="log-entry error">
+                <div class="log-header">
+                    <span class="log-time">2025-08-30 10:32:01</span>
+                    <span class="log-type error">ERROR</span>
+                </div>
+                <div class="log-message">Failed to process contact: invalid email format</div>
+                <div class="log-details" style="display: none;">
+                    <pre>Row 15: "john.doe@invalid"
+Error: Invalid email format
+Suggestion: Check email validation rules</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
