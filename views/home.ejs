@@ -1,35 +1,283 @@
 <%- include('partials/header') %>
 
+<!-- Particle Animation Background -->
+<div class="particles-container">
+    <canvas id="particlesCanvas"></canvas>
+</div>
+
 <div class="hero particles-bg">
     <h1>Automation and Enrichment </h1>
     <p>Streamline your LinkedIn & Email outreach and enrich your contact lists with our powerful ai automations</p>
+    
     <a href="/client/1" class="cta-button morph-button ripple">
         Get Started
         <span>→</span>
     </a>
 </div>
 
-<div class="container">
-    <div class="features">
-        <div class="feature">
-            <!-- <div class="feature-icon"></div> -->
-            <h2>Linkedin Automation</h2>
-            <p>Simply provide a link to a LinkedIn account list, and we'll use advanced tools to generate a comprehensive, enriched list for you.</p>
+
+<!-- AI Workflow Process -->
+<div class="workflow-section">
+    <div class="container">
+        <h2>How Your AI Agents Work Together</h2>
+        <div class="workflow-steps">
+            <div class="workflow-step">
+                <div class="step-number">01</div>
+                <div class="step-icon">🎯</div>
+                <h3>Target Identification</h3>
+                <p>AI agents analyze your requirements and identify the perfect prospects from LinkedIn</p>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">02</div>
+                <div class="step-icon">🔄</div>
+                <h3>Intelligent Processing</h3>
+                <p>Advanced algorithms enrich contact data with valuable insights and business intelligence</p>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">03</div>
+                <div class="step-icon">🚀</div>
+                <h3>Automated Outreach</h3>
+                <p>Personalized campaigns are launched with AI-optimized messaging and timing</p>
+            </div>
         </div>
-        <div class="feature">
-            <!-- <div class="feature-icon"></div> -->
-            <h2>Contact Enrichment</h2>
-            <p>We go beyond basic information, enriching your lists with valuable data points to help you connect with the right people.</p>
-        </div>
-        <div class="feature">
-            <!-- <div class="feature-icon"></div> -->
-            <h2>Email Campaign Setup</h2>
-            <p>Set up and manage automated email campaigns to nurture leads and engage with your audience.</p>
-        </div>
-    </div>
-    <div class="quote">
-        <p>"My clients don’t exactly ask to enrich a list every minute. They make one, we prepare it with the tools, and then we upload it back enriched. That’s it."</p>
     </div>
 </div>
+
+
+<!-- Interactive Terminal -->
+<div class="terminal-section">
+    <div class="terminal-window">
+        <div class="terminal-header">
+            <div class="terminal-controls">
+                <span class="control close"></span>
+                <span class="control minimize"></span>
+                <span class="control maximize"></span>
+            </div>
+            <div class="terminal-title">AI Agent Console</div>
+        </div>
+        <div class="terminal-body">
+            <div id="terminalOutput">
+                <!-- Dynamic content will be generated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+    </div>
+</div>
+
+<!-- Floating Community Section - Professional Design -->
+<div class="floating-community-section">
+    <div class="floating-elements">
+        <div class="floating-shape shape-1">
+            <div class="shape-content automation-theme">
+                <svg class="shape-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="floating-shape shape-2">
+            <div class="shape-content data-theme">
+                <svg class="shape-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="floating-shape shape-3">
+            <div class="shape-content ai-theme">
+                <svg class="shape-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="floating-shape shape-4">
+            <div class="shape-content network-theme">
+                <svg class="shape-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="floating-shape shape-5">
+            <div class="shape-content growth-theme">
+                <svg class="shape-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="floating-shape shape-6">
+            <div class="shape-content tech-theme">
+                <svg class="shape-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="community-content">
+        <div class="content-wrapper">
+            <h2 class="community-headline">
+                Become part of an <em>inspiring community</em> of
+            </h2>
+            <h1 class="community-title">professionals</h1>
+            <p class="community-description">
+                Join thousands of forward-thinking businesses who have transformed 
+                their operations with intelligent automation solutions.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- AI Automation Arsenal -->
+<div class="ai-agents-section">
+    <h2>Your AI Automation Arsenal</h2>
+    <p class="section-subtitle">Meet the intelligent agents that will transform your workflow</p>
+    <div class="floating-agents">
+        <div class="agent-card premium" data-agent="linkedin">
+            <div class="agent-header">
+                <div class="agent-avatar">🤖</div>
+                <div class="capability-icon">📊</div>
+            </div>
+            <h3>LinkedIn Automation Agent</h3>
+            <p>Intelligently scrapes LinkedIn profiles, enriches contact lists, and generates comprehensive prospect databases automatically</p>
+            <div class="agent-features">
+                <span class="feature-tag">Profile Scraping</span>
+                <span class="feature-tag">Data Enrichment</span>
+                <span class="feature-tag">List Generation</span>
+            </div>
+            <div class="agent-status active">Active</div>
+        </div>
+        
+        <div class="agent-card premium" data-agent="contact">
+            <div class="agent-header">
+                <div class="agent-avatar">🧠</div>
+                <div class="capability-icon">🔍</div>
+            </div>
+            <h3>Contact Enrichment Agent</h3>
+            <p>Goes beyond basic information, enriching your contact lists with valuable data points, social profiles, and business intelligence</p>
+            <div class="agent-features">
+                <span class="feature-tag">Data Mining</span>
+                <span class="feature-tag">Profile Analysis</span>
+                <span class="feature-tag">Intelligence Gathering</span>
+            </div>
+            <div class="agent-status active">Active</div>
+        </div>
+        
+        <div class="agent-card premium" data-agent="email">
+            <div class="agent-header">
+                <div class="agent-avatar">⚡</div>
+                <div class="capability-icon">✉️</div>
+            </div>
+            <h3>Email Campaign Agent</h3>
+            <p>Sets up and manages automated email campaigns with personalization, lead nurturing, and intelligent follow-up sequences</p>
+            <div class="agent-features">
+                <span class="feature-tag">Campaign Setup</span>
+                <span class="feature-tag">Personalization</span>
+                <span class="feature-tag">Auto Follow-up</span>
+            </div>
+            <div class="agent-status active">Active</div>
+        </div>
+        
+        <div class="agent-card premium" data-agent="analytics">
+            <div class="agent-header">
+                <div class="agent-avatar">📈</div>
+                <div class="capability-icon">🎯</div>
+            </div>
+            <h3>Analytics & Optimization Agent</h3>
+            <p>Continuously monitors campaign performance, analyzes engagement patterns, and optimizes outreach strategies for maximum ROI</p>
+            <div class="agent-features">
+                <span class="feature-tag">Performance Tracking</span>
+                <span class="feature-tag">AI Optimization</span>
+                <span class="feature-tag">ROI Analysis</span>
+            </div>
+            <div class="agent-status learning">Learning</div>
+        </div>
+    </div>
+</div>
+
+<!-- Working Terminal Animation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const terminalOutput = document.getElementById('terminalOutput');
+    
+    if (!terminalOutput) {
+        console.error('Terminal output not found');
+        return;
+    }
+    
+    const messages = [
+        { user: 'User$', text: 'I need to scrape 500 LinkedIn profiles from tech companies', color: '#00ff00' },
+        { user: 'AI-Agent$', text: 'Processing LinkedIn scraping request... ✓', color: '#ff6b35' },
+        { user: 'User$', text: 'Can you enrich these contacts with email addresses?', color: '#00ff00' },
+        { user: 'AI-Agent$', text: 'Initiating contact enrichment with 95% accuracy... ✓', color: '#ff6b35' },
+        { user: 'User$', text: 'Set up automated follow-up emails for my prospects', color: '#00ff00' },
+        { user: 'AI-Agent$', text: 'Email campaign sequence configured successfully ✓', color: '#ff6b35' }
+    ];
+    
+    let currentMessageIndex = 0;
+    
+    function typeMessage(message, callback) {
+        const line = document.createElement('div');
+        line.style.marginBottom = '10px';
+        line.style.fontFamily = 'Monaco, "Courier New", monospace';
+        
+        const prompt = document.createElement('span');
+        prompt.textContent = message.user + ' ';
+        prompt.style.color = message.color;
+        prompt.style.fontWeight = 'bold';
+        
+        const textSpan = document.createElement('span');
+        textSpan.style.color = '#ffffff';
+        
+        const cursor = document.createElement('span');
+        cursor.textContent = '_';
+        cursor.style.color = message.color;
+        cursor.style.animation = 'blink 1s infinite';
+        
+        line.appendChild(prompt);
+        line.appendChild(textSpan);
+        line.appendChild(cursor);
+        terminalOutput.appendChild(line);
+        
+        let charIndex = 0;
+        const text = message.text;
+        
+        function typeChar() {
+            if (charIndex < text.length) {
+                textSpan.textContent += text.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeChar, 50 + Math.random() * 50);
+            } else {
+                cursor.remove();
+                setTimeout(callback, 1500);
+            }
+        }
+        
+        typeChar();
+    }
+    
+    function typeNextMessage() {
+        if (currentMessageIndex >= messages.length) {
+            setTimeout(() => {
+                terminalOutput.innerHTML = '';
+                currentMessageIndex = 0;
+                typeNextMessage();
+            }, 3000);
+            return;
+        }
+        
+        typeMessage(messages[currentMessageIndex], () => {
+            currentMessageIndex++;
+            typeNextMessage();
+        });
+    }
+    
+    // Start typing animation
+    setTimeout(typeNextMessage, 1000);
+});
+</script>
+
+
 
 <%- include('partials/footer') %>
