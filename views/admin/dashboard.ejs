@@ -1,7 +1,521 @@
-<%- include('../partials/header') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
 
-<div class="container">
-    <h1>Admin Dashboard</h1>
+<div class="admin-dashboard">
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <div class="admin-header-content">
+            <h1 class="admin-title">
+                <svg class="admin-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7V10C2 16 6 20.5 12 22C18 20.5 22 16 22 10V7L12 2Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Admin Dashboard
+            </h1>
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <span class="stat-number">24</span>
+                    <span class="stat-label">Active Clients</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">156</span>
+                    <span class="stat-label">Total Messages</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">8</span>
+                    <span class="stat-label">New Signups</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Navigation Tabs -->
+    <div class="admin-nav-tabs">
+        <div class="admin-nav-left">
+            <button class="tab-btn active" data-tab="clients">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                    <path d="M20 8V14" stroke="currentColor" stroke-width="2"/>
+                    <path d="M23 11H17" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Client Management
+            </button>
+            <button class="tab-btn" data-tab="messages">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Messages
+            </button>
+            <button class="tab-btn" data-tab="monitoring">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 19V6L16 12L9 19Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Activity Monitoring
+            </button>
+            <button class="tab-btn" data-tab="files">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                    <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                File Management
+            </button>
+        </div>
+        
+        <div class="admin-nav-right">
+            <button class="logout-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="2"/>
+                    <polyline points="16,17 21,12 16,7" stroke="currentColor" stroke-width="2"/>
+                    <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="admin-content">
+        <!-- Client Management Tab -->
+        <div class="tab-content active" id="clients">
+            <div class="content-header">
+                <h2>Client Management</h2>
+                <div class="search-filter">
+                    <input type="text" placeholder="Search clients..." class="search-input">
+                    <select class="filter-select">
+                        <option>All Clients</option>
+                        <option>Active</option>
+                        <option>Inactive</option>
+                        <option>New</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="clients-grid">
+                <!-- Sample Client Cards -->
+                <div class="client-card">
+                    <div class="client-header">
+                        <div class="client-avatar">JD</div>
+                        <div class="client-info">
+                            <h3>John Doe</h3>
+                            <span class="client-email">john.doe@email.com</span>
+                            <span class="client-status active">Active</span>
+                        </div>
+                        <div class="client-actions">
+                            <button class="action-btn view-btn" onclick="viewClientDetails('1')">View</button>
+                            <button class="action-btn message-btn" onclick="openClientChat('1')">Message</button>
+                        </div>
+                    </div>
+                    <div class="client-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Platforms</span>
+                            <span class="stat-value">3</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Files</span>
+                            <span class="stat-value">12</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Last Active</span>
+                            <span class="stat-value">2 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="client-card">
+                    <div class="client-header">
+                        <div class="client-avatar">AS</div>
+                        <div class="client-info">
+                            <h3>Alice Smith</h3>
+                            <span class="client-email">alice.smith@email.com</span>
+                            <span class="client-status active">Active</span>
+                        </div>
+                        <div class="client-actions">
+                            <button class="action-btn view-btn" onclick="viewClientDetails('2')">View</button>
+                            <button class="action-btn message-btn" onclick="openClientChat('2')">Message</button>
+                        </div>
+                    </div>
+                    <div class="client-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Platforms</span>
+                            <span class="stat-value">5</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Files</span>
+                            <span class="stat-value">8</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Last Active</span>
+                            <span class="stat-value">1 day ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="client-card">
+                    <div class="client-header">
+                        <div class="client-avatar">MB</div>
+                        <div class="client-info">
+                            <h3>Mike Brown</h3>
+                            <span class="client-email">mike.brown@email.com</span>
+                            <span class="client-status inactive">Inactive</span>
+                        </div>
+                        <div class="client-actions">
+                            <button class="action-btn view-btn" onclick="viewClientDetails('3')">View</button>
+                            <button class="action-btn message-btn" onclick="openClientChat('3')">Message</button>
+                        </div>
+                    </div>
+                    <div class="client-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Platforms</span>
+                            <span class="stat-value">2</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Files</span>
+                            <span class="stat-value">4</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Last Active</span>
+                            <span class="stat-value">1 week ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Tab -->
+        <div class="tab-content" id="messages">
+            <div class="content-header">
+                <h2>Client Messages</h2>
+                <button class="primary-btn" onclick="openNewMessage()">New Message</button>
+            </div>
+            
+            <div class="messages-layout">
+                <div class="clients-list">
+                    <div class="client-item active" data-client-id="1" onclick="selectClient('1')">
+                        <div class="client-avatar">JD</div>
+                        <div class="client-details">
+                            <h4>John Doe</h4>
+                            <p class="last-message">Platform setup completed successfully...</p>
+                            <span class="message-time">2 hours ago</span>
+                        </div>
+                        <div class="unread-badge">3</div>
+                    </div>
+                    
+                    <div class="client-item" data-client-id="2" onclick="selectClient('2')">
+                        <div class="client-avatar">AS</div>
+                        <div class="client-details">
+                            <h4>Alice Smith</h4>
+                            <p class="last-message">Need help with file upload...</p>
+                            <span class="message-time">1 day ago</span>
+                        </div>
+                    </div>
+                    
+                    <div class="client-item" data-client-id="3" onclick="selectClient('3')">
+                        <div class="client-avatar">MB</div>
+                        <div class="client-details">
+                            <h4>Mike Brown</h4>
+                            <p class="last-message">Thank you for the update!</p>
+                            <span class="message-time">3 days ago</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-area">
+                    <div class="chat-header">
+                        <div class="chat-client-info">
+                            <div class="client-avatar">JD</div>
+                            <div>
+                                <h3>John Doe</h3>
+                                <span class="client-status">Online</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-messages">
+                        <div class="message client-message">
+                            <div class="message-content">
+                                <p>Hi, I've completed the platform setup but I'm having trouble with the credentials section.</p>
+                                <span class="message-time">2:30 PM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="message admin-message">
+                            <div class="message-content">
+                                <p>I can see your setup. Let me help you with the credentials. I'll update your configuration now.</p>
+                                <span class="message-time">2:35 PM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="message client-message">
+                            <div class="message-content">
+                                <p>Thank you! That worked perfectly. The automation is running smoothly now.</p>
+                                <span class="message-time">2:45 PM</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input">
+                        <input type="text" placeholder="Type your message..." class="message-input">
+                        <button class="send-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M22 2L11 13" stroke="currentColor" stroke-width="2"/>
+                                <polygon points="22,2 15,22 11,13 2,9" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Monitoring Tab -->
+        <div class="tab-content" id="monitoring">
+            <div class="content-header">
+                <h2>Activity Monitoring Control</h2>
+                <select class="client-selector">
+                    <option>Select Client</option>
+                    <option value="1">John Doe</option>
+                    <option value="2">Alice Smith</option>
+                    <option value="3">Mike Brown</option>
+                </select>
+            </div>
+            
+            <div class="monitoring-panel">
+                <div class="activity-controls">
+                    <h3>Update Client Activity Monitor</h3>
+                    <form class="activity-form">
+                        <div class="form-group">
+                            <label>Activity Status</label>
+                            <select class="form-control">
+                                <option>Running</option>
+                                <option>Paused</option>
+                                <option>Completed</option>
+                                <option>Error</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Progress Percentage</label>
+                            <input type="range" min="0" max="100" value="75" class="progress-slider">
+                            <span class="progress-value">75%</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Status Message</label>
+                            <textarea class="form-control" rows="3" placeholder="Enter status message for client...">Platform integration in progress. Estimated completion in 2 hours.</textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Next Update</label>
+                            <input type="datetime-local" class="form-control">
+                        </div>
+                        
+                        <button type="submit" class="primary-btn">Update Client Monitor</button>
+                    </form>
+                </div>
+                
+                <div class="activity-preview">
+                    <h3>Live Preview - Client View</h3>
+                    <div class="monitor-preview">
+                        <div class="activity-item">
+                            <div class="activity-icon running">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <div class="activity-details">
+                                <h4>Automation Process</h4>
+                                <p>Platform integration in progress. Estimated completion in 2 hours.</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 75%"></div>
+                                </div>
+                                <span class="activity-time">Updated 5 minutes ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Management Tab -->
+        <div class="tab-content" id="files">
+            <div class="content-header">
+                <h2>Client Files Management</h2>
+                <select class="client-selector">
+                    <option>Select Client</option>
+                    <option value="1">John Doe</option>
+                    <option value="2">Alice Smith</option>
+                    <option value="3">Mike Brown</option>
+                </select>
+            </div>
+            
+            <div class="files-grid">
+                <div class="file-category">
+                    <h3>Configuration Files</h3>
+                    <div class="files-list">
+                        <div class="file-item">
+                            <div class="file-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <div class="file-info">
+                                <h4>automation_config.json</h4>
+                                <p>2.4 KB • Uploaded 2 days ago</p>
+                            </div>
+                            <div class="file-actions">
+                                <button class="action-btn">View</button>
+                                <button class="action-btn">Download</button>
+                            </div>
+                        </div>
+                        
+                        <div class="file-item">
+                            <div class="file-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <div class="file-info">
+                                <h4>platform_settings.xml</h4>
+                                <p>1.8 KB • Uploaded 1 week ago</p>
+                            </div>
+                            <div class="file-actions">
+                                <button class="action-btn">View</button>
+                                <button class="action-btn">Download</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="file-category">
+                    <h3>Uploaded Documents</h3>
+                    <div class="files-list">
+                        <div class="file-item">
+                            <div class="file-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="2"/>
+                                    <polyline points="21,15 16,10 5,21" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <div class="file-info">
+                                <h4>business_logo.png</h4>
+                                <p>156 KB • Uploaded 3 days ago</p>
+                            </div>
+                            <div class="file-actions">
+                                <button class="action-btn">View</button>
+                                <button class="action-btn">Download</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<%- include('../partials/footer') %>
+<!-- Client Details Modal -->
+<div class="modal" id="clientDetailsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Client Details</h2>
+            <button class="close-btn" onclick="closeModal('clientDetailsModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="client-detail-tabs">
+                <button class="detail-tab-btn active" data-tab="overview">Overview</button>
+                <button class="detail-tab-btn" data-tab="platforms">Platforms</button>
+                <button class="detail-tab-btn" data-tab="credentials">Credentials</button>
+                <button class="detail-tab-btn" data-tab="configurations">Configurations</button>
+            </div>
+            
+            <div class="detail-tab-content active" id="overview">
+                <div class="client-overview">
+                    <div class="overview-card">
+                        <h3>Client Information</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Name:</label>
+                                <span>John Doe</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Email:</label>
+                                <span>john.doe@email.com</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Joined:</label>
+                                <span>2 months ago</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Status:</label>
+                                <span class="status-badge active">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-tab-content" id="platforms">
+                <div class="platforms-list">
+                    <div class="platform-item">
+                        <h4>Facebook Business</h4>
+                        <p>Status: Connected</p>
+                        <span class="platform-status connected">●</span>
+                    </div>
+                    <div class="platform-item">
+                        <h4>Google Ads</h4>
+                        <p>Status: Connected</p>
+                        <span class="platform-status connected">●</span>
+                    </div>
+                    <div class="platform-item">
+                        <h4>Instagram Business</h4>
+                        <p>Status: Pending</p>
+                        <span class="platform-status pending">●</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-tab-content" id="credentials">
+                <div class="credentials-list">
+                    <div class="credential-item">
+                        <h4>Facebook API Key</h4>
+                        <p>Status: Valid</p>
+                        <button class="action-btn">View</button>
+                    </div>
+                    <div class="credential-item">
+                        <h4>Google OAuth Token</h4>
+                        <p>Status: Valid</p>
+                        <button class="action-btn">View</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-tab-content" id="configurations">
+                <div class="config-list">
+                    <div class="config-item">
+                        <h4>Automation Schedule</h4>
+                        <p>Daily at 9:00 AM</p>
+                    </div>
+                    <div class="config-item">
+                        <h4>Target Audience</h4>
+                        <p>Business professionals, 25-45 years</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/admin.js"></script>
+
+</body>
+</html>
