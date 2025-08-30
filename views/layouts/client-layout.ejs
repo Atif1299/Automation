@@ -1,0 +1,27 @@
+<%- include('../partials/dashboard-header') %>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="dashboard-logo">LinkedIn Automation</a>
+                <h3>Menu</h3>
+            </div>
+            <ul>
+                <li><a href="#credentials">Credentials</a></li>
+                <li><a href="#upload">Upload Files</a></li>
+                <li><a href="#note">Note</a></li>
+                <li><a href="#activity">Activity</a></li>
+            </ul>
+        </aside>
+        <main class="main-content">
+            <div class="dashboard-topbar">
+                <h1>Client Dashboard</h1>
+                <div class="nav-links">
+                    <a href="/admin" class="nav-link">Admin</a>
+                    <a href="/" class="nav-link">Home</a>
+                </div>
+            </div>
+            <%- body %>
+        </main>
+    </div>
+    <script src="/js/client-dashboard.js"></script>
+<%- include('../partials/footer') %>
