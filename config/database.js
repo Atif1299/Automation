@@ -3,13 +3,12 @@ require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        // MongoDB connection options
+        // MongoDB connection options (removed deprecated options)
         const options = {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
             maxPoolSize: 10, // Maintain up to 10 socket connections
-            serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+            serverSelectionTimeoutMS: 10000, // Keep trying to send operations for 10 seconds
             socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+           
         };
 
         const conn = await mongoose.connect(process.env.MONGODB_URI, options);

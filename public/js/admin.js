@@ -243,24 +243,60 @@ function sendMessage() {
     const messageInput = document.querySelector('.message-input');
     const message = messageInput.value.trim();
     
-    if (message) {
-        // Add message to chat (this would typically send to API)
-        const chatMessages = document.querySelector('.chat-messages');
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message admin-message';
-        messageElement.innerHTML = `
-            <div class="message-content">
-                <p>${message}</p>
-                <span class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-            </div>
-        `;
-        
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        // Clear input
-        messageInput.value = '';
+    if (!message) {
+        showNotification('Please enter a message', 'error');
+        return;
     }
+    
+    // Get selected client ID
+    const clientSelector = document.querySelector('#client-selector');
+    const clientId = clientSelector ? clientSelector.value : null;
+    
+    if (!clientId) {
+        showNotification('Please select a client first', 'error');
+        return;
+    }
+    
+    // Send message to backend
+    fetch('/admin/message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            clientId: clientId,
+            message: message
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add message to chat
+            const chatMessages = document.querySelector('.chat-messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message admin-message';
+            messageElement.innerHTML = `
+                <div class="message-content">
+                    <p>${message}</p>
+                    <span class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Clear input
+            messageInput.value = '';
+            
+            showNotification('Message sent successfully', 'success');
+        } else {
+            showNotification(data.error || 'Failed to send message', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending message:', error);
+        showNotification('Failed to send message', 'error');
+    });
 }
 
 function openNewMessage() {

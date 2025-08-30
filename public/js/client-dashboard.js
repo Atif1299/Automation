@@ -370,6 +370,284 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Admin Messages sidebar link handler
+    const adminMessagesLink = document.querySelector('.admin-messages-link');
+    if (adminMessagesLink) {
+        adminMessagesLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get current client ID from URL or data attribute
+            const currentPath = window.location.pathname;
+            const clientId = currentPath.split('/')[2]; // Extract client ID from /client/:id
+            
+            if (clientId) {
+                loadMessagesContent(clientId);
+            } else {
+                console.error('Client ID not found');
+            }
+        });
+    }
+
+    // Handle other sidebar links to return to dashboard
+    const sidebarLinks = document.querySelectorAll('.sidebar a:not(.admin-messages-link)');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetSection = this.getAttribute('href').substring(1); // Remove #
+            
+            // If we're in messages view, reload the dashboard
+            if (document.querySelector('.messages-container')) {
+                loadDashboardContent(targetSection);
+            } else {
+                // Normal tab switching
+                const targetTab = document.querySelector(`[data-tab="${targetSection}"]`);
+                if (targetTab) {
+                    targetTab.click();
+                }
+            }
+        });
+    });
+
+    // Function to load dashboard content
+    async function loadDashboardContent(activeTab = 'credentials') {
+        try {
+            showLoadingState();
+            
+            // Update sidebar active state
+            updateSidebarActiveState(activeTab);
+            
+            // Get original dashboard content (you might want to store this or fetch it)
+            location.reload(); // For now, reload to get back to dashboard
+            
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+            showErrorState('Failed to load dashboard. Please refresh the page.');
+        }
+    }
+
+    // Function to load messages content via AJAX
+    async function loadMessagesContent(clientId) {
+        try {
+            // Show loading state
+            showLoadingState();
+            
+            // Update sidebar active state
+            updateSidebarActiveState('messages');
+            
+            // Fetch messages content
+            const response = await fetch(`/client/${clientId}/messages-content`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to load messages');
+            }
+            
+            const messagesHTML = await response.text();
+            
+            // Replace main content with smooth transition
+            await replaceMainContent(messagesHTML);
+            
+            // Initialize messages functionality
+            initializeMessagesPage(clientId);
+            
+            // Update page title
+            document.title = 'Admin Messages - Client Dashboard';
+            
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            showErrorState('Failed to load messages. Please try again.');
+        }
+    }
+
+    // Function to replace main content with smooth transition
+    async function replaceMainContent(newHTML) {
+        const mainContent = document.querySelector('.main-content');
+        const dashboardContent = mainContent.querySelector('.dashboard-content');
+        
+        // Fade out current content
+        dashboardContent.style.opacity = '0';
+        dashboardContent.style.transform = 'translateY(20px)';
+        
+        // Wait for fade out animation
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Replace content
+        dashboardContent.innerHTML = newHTML;
+        
+        // Fade in new content
+        dashboardContent.style.opacity = '1';
+        dashboardContent.style.transform = 'translateY(0)';
+    }
+
+    // Function to show loading state
+    function showLoadingState() {
+        const mainContent = document.querySelector('.main-content');
+        const dashboardContent = mainContent.querySelector('.dashboard-content');
+        
+        dashboardContent.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading messages...</p>
+            </div>
+        `;
+    }
+
+    // Function to show error state
+    function showErrorState(message) {
+        const mainContent = document.querySelector('.main-content');
+        const dashboardContent = mainContent.querySelector('.dashboard-content');
+        
+        dashboardContent.innerHTML = `
+            <div class="error-container">
+                <div class="error-icon">⚠️</div>
+                <h3>Error</h3>
+                <p>${message}</p>
+                <button onclick="location.reload()" class="retry-btn">Retry</button>
+            </div>
+        `;
+    }
+
+    // Function to update sidebar active state
+    function updateSidebarActiveState(activeSection) {
+        // Remove active class from all sidebar links
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        // Add active class to current section
+        if (activeSection === 'messages') {
+            document.querySelector('.admin-messages-link').classList.add('active');
+        } else {
+            // For dashboard tabs, find the corresponding sidebar link
+            const sidebarLink = document.querySelector(`.sidebar a[href="#${activeSection}"]`);
+            if (sidebarLink) {
+                sidebarLink.classList.add('active');
+            }
+        }
+    }
+
+    // Function to initialize messages page functionality
+    function initializeMessagesPage(clientId) {
+        // Handle message form submission
+        const messageForm = document.getElementById('message-form');
+        if (messageForm) {
+            messageForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const messageInput = document.getElementById('message-input');
+                const message = messageInput.value.trim();
+                
+                if (!message) return;
+                
+                try {
+                    const response = await fetch(`/client/${clientId}/send-message`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Add message to chat immediately for better UX
+                        addMessageToChat(message, 'client');
+                        messageInput.value = '';
+                        
+                        // Show success notification
+                        showNotification('Message sent successfully!', 'success');
+                    } else {
+                        showNotification('Failed to send message: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    showNotification('Failed to send message. Please try again.', 'error');
+                }
+            });
+        }
+
+        // Auto-resize textarea
+        const messageInput = document.getElementById('message-input');
+        if (messageInput) {
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+        }
+    }
+
+    // Function to add message to chat UI
+    function addMessageToChat(message, sender) {
+        const messagesList = document.getElementById('messages-list');
+        const noMessages = messagesList.querySelector('.no-messages');
+        
+        if (noMessages) {
+            noMessages.remove();
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        const now = new Date().toLocaleString();
+        
+        if (sender === 'client') {
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender">You</span>
+                        <span class="message-time">${now}</span>
+                    </div>
+                    <div class="message-text">${message}</div>
+                </div>
+                <div class="message-avatar">
+                    <div class="avatar client-avatar">C</div>
+                </div>
+            `;
+        }
+        
+        messagesList.appendChild(messageDiv);
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    // Function to show notifications
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <span>${message}</span>
+            <button onclick="this.parentElement.remove()">&times;</button>
+        `;
+        
+        // Add styles
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? 'var(--success-color)' : 'var(--error-color)'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 3000);
+    }
+    
     // Real-time updates simulation
     setInterval(() => {
         const messages = [

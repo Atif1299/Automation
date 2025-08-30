@@ -163,4 +163,97 @@ router.get('/:id/logs', async (req, res) => {
     }
 });
 
+// Messages page route
+router.get('/:id/messages', async (req, res) => {
+    try {
+        const clientId = req.params.id;
+        
+        // Find client
+        const client = await Client.findByClientId(clientId);
+        
+        if (!client) {
+            return res.status(404).render('error', { 
+                title: 'Error',
+                message: 'Client not found',
+                layout: false
+            });
+        }
+        
+        res.render('client/messages', { 
+            title: 'Admin Messages', 
+            clientId: clientId,
+            client: client,
+            layout: 'layouts/client-layout',
+            isClientMessages: true
+        });
+    } catch (error) {
+        console.error('❌ Error loading messages:', error);
+        res.status(500).render('error', { 
+            title: 'Error',
+            message: 'Unable to load messages',
+            layout: false
+        });
+    }
+});
+
+// AJAX endpoint for messages content only
+router.get('/:id/messages-content', async (req, res) => {
+    try {
+        const clientId = req.params.id;
+        
+        // Find client
+        const client = await Client.findByClientId(clientId);
+        
+        if (!client) {
+            return res.status(404).json({ error: 'Client not found' });
+        }
+        
+        // Render just the messages content without layout
+        res.render('client/messages-content', { 
+            clientId: clientId,
+            client: client,
+            layout: false
+        });
+    } catch (error) {
+        console.error('❌ Error loading messages content:', error);
+        res.status(500).json({ error: 'Unable to load messages content' });
+    }
+});
+
+// Send message to admin route
+router.post('/:id/send-message', async (req, res) => {
+    try {
+        const clientId = req.params.id;
+        const { message } = req.body;
+        
+        if (!message || !message.trim()) {
+            return res.status(400).json({ error: 'Message cannot be empty' });
+        }
+        
+        // Find client
+        const client = await Client.findByClientId(clientId);
+        
+        if (!client) {
+            return res.status(404).json({ error: 'Client not found' });
+        }
+        
+        // Add client message to activity logs
+        const clientMessage = {
+            activity: 'Client Message',
+            details: message.trim(),
+            status: 'info',
+            timestamp: new Date(),
+            type: 'client_message'
+        };
+        
+        client.activityLogs.push(clientMessage);
+        await client.save();
+        
+        res.json({ success: true, message: 'Message sent successfully' });
+    } catch (error) {
+        console.error('❌ Error sending message:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
 module.exports = router;
