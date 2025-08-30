@@ -26,7 +26,7 @@ router.get('/:id', async (req, res) => {
             clientId: clientId,
             client: client,
             layout: 'layouts/client-layout',
-            isDashboard: true
+            isClientDashboard: true
         });
     } catch (error) {
         console.error('❌ Error loading client dashboard:', error);
