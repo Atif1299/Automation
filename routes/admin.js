@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 
 // Import Client model only if database is connected
 let Client;
@@ -110,6 +112,118 @@ router.post('/message', async (req, res) => {
     } catch (error) {
         console.error('Error sending message:', error);
         res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// DELETE route to remove a client and all associated data
+router.delete('/clients/:clientId', async (req, res) => {
+    console.log('🎯 DELETE route hit - URL:', req.originalUrl);
+    console.log('🎯 Method:', req.method);
+    console.log('🎯 Params:', req.params);
+    console.log('🎯 Headers:', req.headers);
+    
+    try {
+        const { clientId } = req.params;
+        
+        // Check if database is connected
+        if (mongoose.connection.readyState !== 1 || !Client) {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'Database not available' 
+            });
+        }
+
+        console.log(`🗑️ Attempting to delete client: ${clientId}`);
+
+        // Find the client first to make sure it exists
+        const client = await Client.findOne({ clientId });
+        
+        if (!client) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Client not found' 
+            });
+        }
+
+        // Store client info for logging
+        const clientInfo = {
+            clientId: client.clientId,
+            name: client.name,
+            email: client.email,
+            credentialsCount: client.credentials?.length || 0,
+            campaignsCount: client.campaigns?.length || 0,
+            filesCount: client.uploadedFiles?.length || 0,
+            messagesCount: client.activityLogs?.length || 0
+        };
+
+        // Delete all client data from database
+        const deleteResult = await Client.deleteOne({ clientId });
+
+        if (deleteResult.deletedCount === 0) {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Failed to delete client from database' 
+            });
+        }
+
+        // Delete uploaded files from filesystem
+        if (client.uploadedFiles && client.uploadedFiles.length > 0) {
+            const uploadsDir = path.join(__dirname, '../uploads', clientId);
+            
+            if (fs.existsSync(uploadsDir)) {
+                try {
+                    // Delete all files in client directory
+                    const files = fs.readdirSync(uploadsDir);
+                    for (const file of files) {
+                        const filePath = path.join(uploadsDir, file);
+                        fs.unlinkSync(filePath);
+                    }
+                    
+                    // Remove the client directory
+                    fs.rmdirSync(uploadsDir);
+                    console.log(`🗂️ Deleted ${files.length} files and client directory: ${uploadsDir}`);
+                } catch (fileError) {
+                    console.warn(`⚠️ Could not delete client files directory: ${uploadsDir}`, fileError.message);
+                }
+            }
+        }
+
+        // Log successful deletion
+        console.log(`✅ Client deleted successfully:`, {
+            clientId: clientInfo.clientId,
+            name: clientInfo.name,
+            email: clientInfo.email,
+            deletedData: {
+                credentials: clientInfo.credentialsCount,
+                campaigns: clientInfo.campaignsCount,
+                files: clientInfo.filesCount,
+                messages: clientInfo.messagesCount
+            }
+        });
+
+        res.setHeader('Content-Type', 'application/json');
+        res.json({ 
+            success: true, 
+            message: `Client "${clientInfo.name}" and all associated data have been permanently deleted`,
+            deletedData: {
+                clientId: clientInfo.clientId,
+                name: clientInfo.name,
+                email: clientInfo.email,
+                credentials: clientInfo.credentialsCount,
+                campaigns: clientInfo.campaignsCount,
+                files: clientInfo.filesCount,
+                messages: clientInfo.messagesCount
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error deleting client:', error);
+        res.setHeader('Content-Type', 'application/json');
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error while deleting client',
+            error: error.message 
+        });
     }
 });
 

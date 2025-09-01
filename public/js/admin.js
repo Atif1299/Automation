@@ -495,6 +495,229 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Admin Dashboard initialized successfully');
 });
 
+// Client Delete Functionality
+let clientToDelete = null;
+
+function confirmDeleteClient(clientId, clientName) {
+    clientToDelete = { clientId, clientName };
+    
+    // Set client info in modal
+    document.getElementById('deleteClientName').textContent = clientName;
+    document.getElementById('deleteClientEmail').textContent = getClientEmail(clientId);
+    
+    // Reset confirmation input
+    const confirmInput = document.getElementById('deleteConfirmation');
+    confirmInput.value = '';
+    
+    // Disable delete button
+    document.getElementById('confirmDeleteBtn').disabled = true;
+    
+    // Show modal
+    const modal = document.getElementById('deleteClientModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        // Focus on confirmation input
+        setTimeout(() => {
+            confirmInput.focus();
+        }, 100);
+    }
+}
+
+function getClientEmail(clientId) {
+    // Get email from the client card
+    const clientCard = document.querySelector(`[onclick*="${clientId}"]`)?.closest('.client-card');
+    if (clientCard) {
+        const emailElement = clientCard.querySelector('.client-email');
+        return emailElement ? emailElement.textContent : '';
+    }
+    return '';
+}
+
+// Handle confirmation input
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmInput = document.getElementById('deleteConfirmation');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    if (confirmInput && confirmBtn) {
+        confirmInput.addEventListener('input', function() {
+            const isValid = this.value.trim().toUpperCase() === 'DELETE';
+            confirmBtn.disabled = !isValid;
+            
+            if (isValid) {
+                confirmBtn.classList.add('confirmed');
+            } else {
+                confirmBtn.classList.remove('confirmed');
+            }
+        });
+    }
+});
+
+async function deleteClient() {
+    if (!clientToDelete) {
+        console.error('No client selected for deletion');
+        return;
+    }
+    
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const originalText = confirmBtn.innerHTML;
+    
+    try {
+        // Show loading state
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="spinning">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="31.416" stroke-dashoffset="31.416" opacity="0.3"/>
+                <path d="M12 2A10 10 0 0 1 22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Deleting...
+        `;
+        
+        // Make API call to delete client
+        const response = await fetch(`/admin/clients/${clientToDelete.clientId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        // Log response for debugging
+        console.log('Delete response status:', response.status);
+        console.log('Delete response headers:', response.headers);
+        
+        const responseText = await response.text();
+        console.log('Delete response text:', responseText);
+        
+        if (response.ok) {
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Failed to parse JSON response:', parseError);
+                throw new Error('Server returned invalid JSON response');
+            }
+            
+            // Show success notification
+            showNotification('Client deleted successfully', 'success');
+            
+            // Close modal
+            closeModal('deleteClientModal');
+            
+            // Remove client card from UI
+            removeClientCardFromUI(clientToDelete.clientId);
+            
+            // Reset client to delete
+            clientToDelete = null;
+            
+            // Update dashboard stats without refreshing
+            updateDashboardStats();
+            
+        } else {
+            let error;
+            try {
+                error = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Failed to parse error response:', parseError);
+                console.error('Raw error response:', responseText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}. Response: ${responseText.substring(0, 200)}...`);
+            }
+            throw new Error(error.message || error.error || 'Failed to delete client');
+        }
+        
+    } catch (error) {
+        console.error('Delete client error:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+        
+        // Reset button
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+    }
+}
+
+function removeClientCardFromUI(clientId) {
+    // Find and remove the client card
+    const clientCard = document.querySelector(`[onclick*="${clientId}"]`)?.closest('.client-card');
+    if (clientCard) {
+        clientCard.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => {
+            clientCard.remove();
+        }, 300);
+    }
+}
+
+function updateDashboardStats() {
+    // Update stats by counting remaining client cards
+    const remainingClientCards = document.querySelectorAll('.client-card');
+    const totalClients = remainingClientCards.length;
+    
+    // Count active clients (those with "active" status)
+    const activeClients = Array.from(remainingClientCards).filter(card => {
+        const statusElement = card.querySelector('.client-status.active');
+        return statusElement !== null;
+    }).length;
+    
+    // Update stat cards in the UI
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        const label = card.querySelector('.stat-label')?.textContent;
+        const numberElement = card.querySelector('.stat-number');
+        
+        if (label && numberElement) {
+            if (label.includes('Active Clients')) {
+                numberElement.textContent = activeClients;
+                // Add a subtle animation to show the change
+                numberElement.style.animation = 'statUpdate 0.5s ease-out';
+                setTimeout(() => {
+                    numberElement.style.animation = '';
+                }, 500);
+            } else if (label.includes('Total') && label.includes('Client')) {
+                numberElement.textContent = totalClients;
+                numberElement.style.animation = 'statUpdate 0.5s ease-out';
+                setTimeout(() => {
+                    numberElement.style.animation = '';
+                }, 500);
+            }
+        }
+    });
+}
+
+// Add CSS for animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.95); }
+    }
+    
+    @keyframes statUpdate {
+        0% { transform: scale(1); color: var(--text-primary); }
+        50% { transform: scale(1.1); color: var(--primary-color); }
+        100% { transform: scale(1); color: var(--text-primary); }
+    }
+    
+    .spinning {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .confirmed {
+        background: #dc2626 !important;
+        animation: confirmPulse 0.3s ease-out;
+    }
+    
+    @keyframes confirmPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(style);
+
 // Export functions for external use
 window.AdminDashboard = {
     switchTab,
@@ -507,5 +730,7 @@ window.AdminDashboard = {
     updateClientMonitor,
     refreshData,
     showNotification,
-    logout
+    logout,
+    confirmDeleteClient,
+    deleteClient
 };
