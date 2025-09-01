@@ -1,7 +1,7 @@
-// Landing Page Interactive Features - Particles Only
+// Landing Page Interactive Features - Particles & Terminal Animation
 
-// ===== PARTICLE ANIMATION BACKGROUND =====
-class ParticleSystem {
+// ===== LANDING PAGE PARTICLE ANIMATION BACKGROUND =====
+class LandingParticleSystem {
     constructor() {
         this.canvas = document.getElementById('particlesCanvas');
         if (!this.canvas) {
@@ -87,14 +87,120 @@ class ParticleSystem {
     }
 }
 
-// ===== INITIALIZE PARTICLES ONLY =====
+// ===== TERMINAL ANIMATION =====
+class TerminalAnimation {
+    constructor() {
+        this.terminalOutput = document.getElementById('terminalOutput');
+        if (!this.terminalOutput) {
+            console.log('Terminal output not found');
+            return;
+        }
+        
+        this.messages = [
+            { type: 'system', text: 'AI Agent System Initialized...' },
+            { type: 'success', text: 'Connected to LinkedIn automation service' },
+            { type: 'process', text: 'Scanning prospect database...' },
+            { type: 'success', text: 'Found 1,247 potential prospects' },
+            { type: 'process', text: 'Generating personalized messages...' },
+            { type: 'success', text: 'AI generated 1,247 unique outreach messages' },
+            { type: 'process', text: 'Scheduling automated campaigns...' },
+            { type: 'success', text: 'Campaign scheduled: 50 messages/day' },
+            { type: 'info', text: 'Estimated completion: 25 days' },
+            { type: 'success', text: 'Automation pipeline active ✓' }
+        ];
+        
+        this.currentMessageIndex = 0;
+        this.init();
+    }
+    
+    init() {
+        setTimeout(() => this.typeNextMessage(), 1000);
+    }
+    
+    typeMessage(message, callback) {
+        const line = document.createElement('div');
+        line.className = `terminal-line ${message.type}`;
+        
+        const prompt = document.createElement('span');
+        prompt.className = 'terminal-prompt';
+        prompt.textContent = this.getPromptByType(message.type);
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'terminal-text';
+        
+        const cursor = document.createElement('span');
+        cursor.className = 'terminal-cursor';
+        cursor.textContent = '█';
+        
+        line.appendChild(prompt);
+        line.appendChild(textSpan);
+        line.appendChild(cursor);
+        this.terminalOutput.appendChild(line);
+        
+        let charIndex = 0;
+        const text = message.text;
+        
+        const typeChar = () => {
+            if (charIndex < text.length) {
+                textSpan.textContent += text.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeChar, 50 + Math.random() * 50);
+            } else {
+                cursor.remove();
+                setTimeout(callback, 1500);
+            }
+        };
+        
+        typeChar();
+    }
+    
+    getPromptByType(type) {
+        const prompts = {
+            system: '[SYSTEM] ',
+            success: '[SUCCESS] ',
+            process: '[PROCESS] ',
+            info: '[INFO] ',
+            error: '[ERROR] '
+        };
+        return prompts[type] || '[SYSTEM] ';
+    }
+    
+    typeNextMessage() {
+        if (this.currentMessageIndex >= this.messages.length) {
+            setTimeout(() => {
+                this.terminalOutput.innerHTML = '';
+                this.currentMessageIndex = 0;
+                this.typeNextMessage();
+            }, 3000);
+            return;
+        }
+        
+        this.typeMessage(this.messages[this.currentMessageIndex], () => {
+            this.currentMessageIndex++;
+            this.typeNextMessage();
+        });
+    }
+}
+
+// ===== INITIALIZE ALL LANDING PAGE FEATURES =====
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Particles script loaded');
+    console.log('Landing page script loaded');
     
     // Initialize particle system if canvas exists
     const particlesCanvas = document.getElementById('particlesCanvas');
     if (particlesCanvas) {
-        console.log('Initializing ParticleSystem');
-        new ParticleSystem();
+        console.log('Initializing LandingParticleSystem');
+        new LandingParticleSystem();
+    } else {
+        console.log('Particles canvas NOT found');
+    }
+    
+    // Initialize terminal animation if terminal exists
+    const terminalOutput = document.getElementById('terminalOutput');
+    if (terminalOutput) {
+        console.log('Initializing TerminalAnimation');
+        new TerminalAnimation();
+    } else {
+        console.log('Terminal output NOT found');
     }
 });

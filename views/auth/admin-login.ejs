@@ -1,0 +1,45 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="/css/auth.css">
+
+<main class="auth-main-content">
+    <div class="auth-card-container">
+        <div class="auth-form-section">
+            <h1 class="auth-title">Admin Login</h1>
+            
+            <div id="error-message" class="error-message"></div>
+            <div id="success-message" class="success-message"></div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="text" id="username" name="username" placeholder="Admin Username" required>
+                    <span class="input-icon">👤</span>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                    <span class="input-icon">🔒</span>
+                </div>
+                
+                <button type="submit" class="auth-button admin-theme" id="login-btn">
+                    Login
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <p><a href="/auth/client-login">Client access</a></p>
+                <p><a href="/">← Back to Home</a></p>
+            </div>
+        </div>
+        
+        <div class="auth-welcome-section admin-theme">
+            <h2 class="welcome-title">ADMIN<br>PORTAL!</h2>
+            <p class="welcome-subtitle">
+                Access the admin dashboard to manage clients, monitor campaigns, 
+                and oversee platform operations.
+            </p>
+        </div>
+    </div>
+</main>
+
+<script src="/js/auth.js"></script>
+<%- include('../partials/footer') %>

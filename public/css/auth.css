@@ -1,0 +1,296 @@
+/* ==========================================================================
+   AUTH PAGES SHARED STYLES
+   Modular CSS for all authentication pages (login, register, admin)
+   ========================================================================== */
+
+/* Base Auth Layout */
+.auth-main-content {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem 0;
+}
+
+.auth-card-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    width: 900px;
+    height: 500px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+}
+
+.auth-card-container.large {
+    width: 950px;
+    height: 600px;
+}
+
+.auth-form-section {
+    flex: 1;
+    padding: 60px 50px;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+}
+
+.auth-form-section.compact {
+    padding: 40px 50px;
+    overflow-y: auto;
+}
+
+.auth-welcome-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Theme Variations */
+.auth-welcome-section.client-theme {
+    background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+}
+
+.auth-welcome-section.admin-theme {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+}
+
+.auth-welcome-section.register-theme {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+.auth-welcome-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: rotate(45deg);
+}
+
+/* Typography */
+.auth-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.welcome-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    z-index: 2;
+    position: relative;
+}
+
+.welcome-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    z-index: 2;
+    position: relative;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.form-group.compact {
+    margin-bottom: 1.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 15px 40px 15px 0;
+    font-size: 1rem;
+    color: white;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    border-bottom-color: var(--primary-color, #667eea);
+}
+
+.form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Chrome Autofill Styling Override */
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover,
+.form-group input:-webkit-autofill:focus,
+.form-group input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+    -webkit-text-fill-color: rgb(27, 15, 15) !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important;
+    transition: border-color 0.3s ease !important;
+}
+
+.form-group input:-webkit-autofill:focus {
+    border-bottom-color: var(--primary-color, #667eea) !important;
+}
+
+/* Theme-specific autofill focus colors */
+.client-theme .form-group input:-webkit-autofill:focus {
+    border-bottom-color: #8B5CF6 !important;
+}
+
+.admin-theme .form-group input:-webkit-autofill:focus {
+    border-bottom-color: #FF6B6B !important;
+}
+
+.register-theme .form-group input:-webkit-autofill:focus {
+    border-bottom-color: #10B981 !important;
+}
+
+.form-group .input-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.2rem;
+}
+
+/* Color Variations for Focus */
+.client-theme .form-group input:focus {
+    border-bottom-color: #8B5CF6;
+}
+
+.admin-theme .form-group input:focus {
+    border-bottom-color: #FF6B6B;
+}
+
+.register-theme .form-group input:focus {
+    border-bottom-color: #10B981;
+}
+
+/* Buttons */
+.auth-button {
+    border: none;
+    padding: 15px 0;
+    border-radius: 50px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin: 2rem 0;
+    transition: all 0.3s ease;
+}
+
+.auth-button.client-theme {
+    background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+}
+
+.auth-button.admin-theme {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+}
+
+.auth-button.register-theme {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+}
+
+.auth-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Messages */
+.error-message {
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: none;
+    font-size: 0.9rem;
+}
+
+.success-message {
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: none;
+    font-size: 0.9rem;
+}
+
+/* Links */
+.auth-links {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.auth-links a {
+    color: #FF6B6B;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .auth-card-container {
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        max-width: 400px;
+    }
+    
+    .auth-card-container.large {
+        max-width: 400px;
+    }
+    
+    .auth-welcome-section {
+        order: -1;
+        padding: 30px 20px;
+    }
+    
+    .welcome-title {
+        font-size: 2rem;
+    }
+    
+    .auth-form-section {
+        padding: 40px 30px;
+    }
+    
+    .auth-form-section.compact {
+        padding: 30px 20px;
+    }
+}

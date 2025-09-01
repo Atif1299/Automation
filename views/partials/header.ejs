@@ -13,15 +13,21 @@
     <% } %>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script src="/js/landing-page.js" defer></script>
 </head>
 <body>
     <nav>
         <div class="nav-container">
             <a href="/" class="logo">LinkedIn Automation</a>
             <ul class="nav-links">
-                <li><a href="/admin">Admin</a></li>
-                <li><a href="/client/1">Client</a></li>
+                <li><a href="/auth/admin-login">Admin Login</a></li>
+                <li><a href="/auth/client-login">Client Login</a></li>
+                <li>
+                    <button id="smoothScrollToggle" class="smooth-scroll-toggle" title="Toggle Smooth Scrolling">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L3 7l9 5 9-5-9-5zM3 17l9 5 9-5M3 12l9 5 9-5"/>
+                        </svg>
+                    </button>
+                </li>
             </ul>
         </div>
     </nav>

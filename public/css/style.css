@@ -175,6 +175,67 @@ nav .nav-links a:active {
     transform: scale(0.98);
 }
 
+/* Smooth Scroll Toggle Button */
+.smooth-scroll-toggle {
+    background: none;
+    border: 2px solid var(--border-light);
+    color: var(--text-light);
+    padding: 8px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.smooth-scroll-toggle:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.smooth-scroll-toggle.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--bg-primary);
+}
+
+.smooth-scroll-toggle svg {
+    width: 16px;
+    height: 16px;
+    transition: var(--transition-normal);
+}
+
+.smooth-scroll-toggle.active svg {
+    transform: scale(1.1);
+}
+
+/* Feedback animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
 /* Hero Section with Dark Theme and Advanced Animations */
 .hero {
     text-align: center;
@@ -864,7 +925,41 @@ body {
     color: var(--text-primary);
 }
 
-/* ===== NEW LANDING PAGE FEATURES ===== */
+/* ===== PERFORMANCE OPTIMIZATIONS FOR SMOOTH SCROLLING ===== */
+
+/* GPU acceleration for animated elements */
+.hero, 
+.particles-container, 
+.floating-shape, 
+.terminal-window,
+.workflow-step,
+.agent-card,
+.feature {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Optimize animations for 60fps */
+@media (prefers-reduced-motion: no-preference) {
+    * {
+        scroll-behavior: auto !important; /* Override browser smooth scroll */
+    }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ===== ENHANCED SMOOTH SCROLLBAR STYLING ===== */
 
 /* Particle Animation Background */
 .particles-container {
@@ -874,7 +969,7 @@ body {
     width: 100%;
     height: 100vh;
     pointer-events: none;
-    z-index: 1;
+    z-index: 3;
 }
 
 #particlesCanvas {
@@ -884,7 +979,11 @@ body {
 
 .hero {
     position: relative;
-    z-index: 2;
+    z-index: 4;
+}
+
+.particles-bg {
+    position: relative;
 }
 
 /* Floating AI Agent Cards */
@@ -1261,6 +1360,52 @@ body {
     font-family: 'Courier New', monospace;
     min-height: 300px;
     position: relative;
+}
+
+/* Terminal Animation Styles */
+.terminal-line {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.terminal-prompt {
+    color: #00d4ff;
+    font-weight: bold;
+    margin-right: 8px;
+    min-width: 80px;
+}
+
+.terminal-text {
+    color: #c9d1d9;
+}
+
+.terminal-line.success .terminal-prompt {
+    color: #00f5a0;
+}
+
+.terminal-line.process .terminal-prompt {
+    color: #ffb347;
+}
+
+.terminal-line.info .terminal-prompt {
+    color: #4ecdc4;
+}
+
+.terminal-line.error .terminal-prompt {
+    color: #ff4757;
+}
+
+.terminal-cursor {
+    background: #00d4ff;
+    color: #0d1117;
+    animation: blink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
 }
 
 /* Enhanced terminal styling for inline script */

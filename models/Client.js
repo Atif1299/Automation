@@ -27,7 +27,7 @@ const clientSchema = new mongoose.Schema({
         platform: {
             type: String,
             required: true,
-            enum: ['linkedin', 'twitter', 'email', 'facebook', 'instagram']
+            enum: ['account', 'linkedin', 'twitter', 'email', 'facebook', 'instagram']
         },
         username: {
             type: String,
@@ -142,8 +142,8 @@ const clientSchema = new mongoose.Schema({
     // Client Status
     status: {
         type: String,
-        enum: ['active', 'inactive', 'suspended'],
-        default: 'active'
+        enum: ['active', 'inactive', 'suspended', 'pending_verification'],
+        default: 'pending_verification'
     },
     
     // Subscription/Plan
@@ -158,12 +158,43 @@ const clientSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    lastLogin: {
-        type: Date
-    },
     updatedAt: {
         type: Date,
         default: Date.now
+    },
+    
+    // Authentication & Security
+    lastLogin: {
+        type: Date
+    },
+    emailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: {
+        type: String
+    },
+    passwordResetToken: {
+        type: String
+    },
+    passwordResetExpires: {
+        type: Date
+    },
+    
+    // Subscription & Billing
+    plan: {
+        type: String,
+        enum: ['free', 'basic', 'premium', 'enterprise'],
+        default: 'free'
+    },
+    planExpiry: {
+        type: Date
+    },
+    billingInfo: {
+        customerId: String,
+        subscriptionId: String,
+        lastPayment: Date,
+        nextPayment: Date
     }
 }, {
     timestamps: true,
@@ -178,7 +209,9 @@ clientSchema.index({ 'credentials.platform': 1 });
 clientSchema.pre('save', async function(next) {
     if (this.isModified('credentials')) {
         for (let cred of this.credentials) {
-            if (cred.isModified('password') || cred.isNew) {
+            // Hash password if it's new or modified and not already hashed
+            if ((cred.isModified('password') || cred.isNew) && cred.password && !cred.password.startsWith('$2b$')) {
+                console.log('🔒 Hashing password for platform:', cred.platform);
                 cred.password = await bcrypt.hash(cred.password, 12);
             }
         }
