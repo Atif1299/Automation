@@ -476,4 +476,85 @@ router.delete('/clients/:clientId', async (req, res) => {
     }
 });
 
+// Download file route
+router.get('/download-file/:fileName', (req, res) => {
+    try {
+        const fileName = req.params.fileName;
+        const filePath = path.join(__dirname, '../uploads/admin-files', fileName);
+        
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'File not found' 
+            });
+        }
+        
+        // Get original filename (remove admin prefix and timestamp)
+        const originalName = fileName.replace(/^admin-\d+-\d+-/, '');
+        
+        // Set headers for download
+        res.setHeader('Content-Disposition', `attachment; filename="${originalName}"`);
+        res.setHeader('Content-Type', 'application/octet-stream');
+        
+        // Stream the file
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        
+        console.log('📥 File download initiated:', originalName);
+        
+    } catch (error) {
+        console.error('❌ Error downloading file:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error downloading file',
+            error: error.message 
+        });
+    }
+});
+
+// View file route
+router.get('/view-file/:fileName', (req, res) => {
+    try {
+        const fileName = req.params.fileName;
+        const filePath = path.join(__dirname, '../uploads/admin-files', fileName);
+        
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'File not found' 
+            });
+        }
+        
+        // Get file extension to set proper content type
+        const ext = path.extname(fileName).toLowerCase();
+        let contentType = 'application/octet-stream';
+        
+        if (ext === '.pdf') contentType = 'application/pdf';
+        else if (['.jpg', '.jpeg'].includes(ext)) contentType = 'image/jpeg';
+        else if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.txt') contentType = 'text/plain';
+        else if (ext === '.csv') contentType = 'text/csv';
+        
+        // Set headers for viewing
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', 'inline');
+        
+        // Stream the file
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        
+        console.log('👁️ File view initiated:', fileName);
+        
+    } catch (error) {
+        console.error('❌ Error viewing file:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error viewing file',
+            error: error.message 
+        });
+    }
+});
+
 module.exports = router;

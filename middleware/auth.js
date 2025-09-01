@@ -28,11 +28,16 @@ const authenticateToken = (req, res, next) => {
 // Admin Authentication Middleware
 const authenticateAdmin = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    let token = authHeader && authHeader.split(' ')[1];
+    
+    // For web routes, also check cookies
+    if (!token && req.cookies && req.cookies.adminToken) {
+        token = req.cookies.adminToken;
+    }
 
     if (!token) {
         // For web routes, redirect to login
-        if (req.path.startsWith('/admin')) {
+        if (req.path.startsWith('/admin') && req.method === 'GET') {
             return res.redirect('/auth/admin-login');
         }
         return res.status(401).json({ 
@@ -43,7 +48,7 @@ const authenticateAdmin = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, admin) => {
         if (err || admin.role !== 'admin') {
-            if (req.path.startsWith('/admin')) {
+            if (req.path.startsWith('/admin') && req.method === 'GET') {
                 return res.redirect('/auth/admin-login');
             }
             return res.status(403).json({ 
