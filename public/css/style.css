@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* Import responsive framework first */
-@import url('responsive.css');
-
 /* CSS Custom Properties for Enhanced Professional Dark Theme */
 :root {
     --primary-color: #00d4ff;
@@ -51,9 +48,8 @@
     --transition-normal: 0.3s ease;
     --transition-slow: 0.5s ease;
     
-    /* Mobile-first section padding */
-    --section-padding: 60px 0;
-    --container-padding: 0 var(--mobile-padding);
+    --section-padding: 100px 0;
+    --container-padding: 0 24px;
 }
 
 * {
@@ -96,122 +92,52 @@ body {
 }
 
 .container {
-    max-width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: var(--container-padding);
+    padding: 0 24px;
 }
 
-/* Mobile-first Navigation */
+/* Clean Professional Navigation - Minimalist Corporate Design */
 nav {
-    position: fixed;
+    background: rgba(15, 23, 35, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
-    background: var(--bg-nav);
-    backdrop-filter: blur(20px);
     z-index: 1000;
-    border-bottom: 1px solid var(--border-light);
-    padding: 12px 0;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+}
+
+nav:hover {
+    background: rgba(15, 23, 35, 0.98);
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
 }
 
 .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 0 var(--mobile-padding);
 }
 
-.logo {
-    font-family: 'Poppins', sans-serif;
-    font-size: var(--mobile-text-xl);
-    font-weight: 700;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+nav .logo {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #ffffff;
+    position: relative;
+    transition: all 0.2s ease;
     text-decoration: none;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.01em;
 }
 
-/* Mobile Navigation Toggle */
-.nav-toggle {
-    display: block;
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    font-size: 24px;
-    cursor: pointer;
-    padding: 8px;
-    min-height: var(--touch-min);
-    min-width: var(--touch-min);
-    border-radius: var(--border-radius-md);
-    transition: var(--transition-normal);
-}
-
-.nav-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-toggle:focus {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
-
-/* Mobile Navigation Menu */
-.nav-links {
-    position: fixed;
-    top: 60px;
-    left: 0;
-    right: 0;
-    background: var(--bg-nav);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border-light);
-    transform: translateY(-100%);
-    transition: transform 0.3s ease;
-    opacity: 0;
-    visibility: hidden;
-    padding: var(--mobile-padding);
-    box-shadow: var(--shadow-lg);
-}
-
-.nav-links.open {
-    transform: translateY(0);
-    opacity: 1;
-    visibility: visible;
-}
-
-.nav-links ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--mobile-gap);
-}
-
-.nav-links a {
-    display: block;
-    padding: 16px 20px;
-    min-height: var(--touch-min);
-    color: var(--text-light);
-    text-decoration: none;
-    border-radius: var(--border-radius-md);
-    transition: var(--transition-normal);
-    font-weight: 500;
-    font-size: var(--mobile-text-base);
-}
-
-.nav-links a:hover,
-.nav-links a:focus {
-    background: rgba(0, 212, 255, 0.1);
-    color: var(--primary-color);
-    outline: none;
-}
-
-.nav-links a:active {
-    transform: scale(0.98);
+nav .logo:hover {
+    color: #00d4ff;
 }
 
 nav .nav-links {
@@ -310,18 +236,15 @@ nav .nav-links a:active {
     }
 }
 
-/* Hero Section - Mobile First */
+/* Hero Section with Dark Theme and Advanced Animations */
 .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
     text-align: center;
-    background: var(--gradient-bg);
-    padding: 80px var(--mobile-padding) 60px;
+    padding: 140px 0 120px;
+    background: var(--bg-primary);
+    background-image: var(--gradient-bg);
     position: relative;
     overflow: hidden;
+    height: 90vh;
 }
 
 .hero::before {
@@ -361,19 +284,19 @@ nav .nav-links a:active {
 
 .hero h1 {
     font-family: 'Poppins', sans-serif;
-    font-size: var(--mobile-text-3xl);
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 20px;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    max-width: 100%;
+    font-size: clamp(42px, 6vw, 54px);
+    font-weight: 800;
+    margin-bottom: 32px;
+    line-height: 1.1;
     background: linear-gradient(135deg, #ffffff 0%, #e6edf3 50%, #c9d1d9 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     position: relative;
     z-index: 1;
+    animation: slideInUp 0.8s ease-out 0.2s both;
+    letter-spacing: -1px;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
 }
 
 /* Add subtle cyan accent to specific words */
@@ -403,13 +326,16 @@ nav .nav-links a:active {
 }
 
 .hero p {
-    font-size: var(--mobile-text-base);
-    color: var(--text-light);
-    margin-bottom: 32px;
-    line-height: 1.6;
-    max-width: 100%;
+    font-size: 22px;
+    color: var(--text-secondary);
+    max-width: 700px;
+    margin: 0 auto 48px;
+    line-height: 1.7;
     position: relative;
     z-index: 1;
+    animation: slideInUp 0.8s ease-out 0.4s both;
+    font-weight: 400;
+    opacity: 0.9;
 }
 
 /* Enhanced CTA Button */
@@ -1777,235 +1703,4 @@ body {
 .ripple:active::before {
     width: 300px;
     height: 300px;
-}
-
-/* ==========================================================================
-   RESPONSIVE BREAKPOINTS - MOBILE FIRST ENHANCEMENTS
-   ========================================================================== */
-
-/* Small Mobile: 320px+ */
-@media (min-width: 320px) {
-    .container {
-        max-width: 100%;
-        padding: 0 var(--mobile-padding);
-    }
-    
-    .hero h1 {
-        font-size: 28px;
-    }
-    
-    .hero p {
-        font-size: 16px;
-        margin-bottom: 24px;
-    }
-    
-    .hero .cta-button {
-        padding: 14px 28px;
-        font-size: 16px;
-    }
-}
-
-/* Mobile: 480px+ */
-@media (min-width: 480px) {
-    :root {
-        --mobile-padding: 20px;
-        --mobile-gap: 12px;
-        --section-padding: 80px 0;
-    }
-    
-    .nav-toggle {
-        display: none;
-    }
-    
-    .nav-links {
-        position: static;
-        transform: none;
-        opacity: 1;
-        visibility: visible;
-        background: none;
-        border: none;
-        padding: 0;
-        box-shadow: none;
-    }
-    
-    .nav-links ul {
-        flex-direction: row;
-        justify-content: center;
-        gap: 16px;
-    }
-    
-    .hero {
-        padding: 100px var(--mobile-padding) 80px;
-    }
-    
-    .hero h1 {
-        font-size: 32px;
-    }
-    
-    .hero p {
-        font-size: 18px;
-        max-width: 480px;
-        margin: 0 auto 32px;
-    }
-    
-    .hero .cta-button {
-        padding: 16px 32px;
-        font-size: 18px;
-    }
-}
-
-/* Tablet: 768px+ */
-@media (min-width: 768px) {
-    :root {
-        --mobile-padding: 24px;
-        --mobile-gap: 16px;
-        --section-padding: 100px 0;
-    }
-    
-    .container {
-        max-width: 750px;
-        padding: 0 var(--mobile-padding);
-    }
-    
-    .nav-container {
-        padding: 0 var(--mobile-padding);
-    }
-    
-    .hero {
-        padding: 120px var(--mobile-padding) 100px;
-    }
-    
-    .hero h1 {
-        font-size: 42px;
-        margin-bottom: 24px;
-    }
-    
-    .hero p {
-        font-size: 20px;
-        max-width: 600px;
-        margin-bottom: 40px;
-    }
-    
-    .hero .cta-button {
-        padding: 18px 36px;
-        font-size: 18px;
-    }
-    
-    .nav-links ul {
-        gap: 24px;
-    }
-    
-    .nav-links a {
-        padding: 12px 18px;
-    }
-}
-
-/* Desktop: 1024px+ */
-@media (min-width: 1024px) {
-    :root {
-        --mobile-padding: 32px;
-        --mobile-gap: 20px;
-        --section-padding: 120px 0;
-    }
-    
-    .container {
-        max-width: 1000px;
-    }
-    
-    .nav-container {
-        max-width: 1200px;
-        padding: 0 32px;
-    }
-    
-    .hero {
-        padding: 140px 32px 120px;
-    }
-    
-    .hero h1 {
-        font-size: 48px;
-        margin-bottom: 32px;
-    }
-    
-    .hero p {
-        font-size: 22px;
-        max-width: 700px;
-        margin-bottom: 48px;
-    }
-    
-    .hero .cta-button {
-        padding: 20px 40px;
-        font-size: 18px;
-    }
-    
-    .nav-links ul {
-        gap: 32px;
-    }
-}
-
-/* Large Desktop: 1200px+ */
-@media (min-width: 1200px) {
-    .container {
-        max-width: 1200px;
-        padding: 0 40px;
-    }
-    
-    .nav-container {
-        max-width: 1400px;
-        padding: 0 40px;
-    }
-    
-    .hero h1 {
-        font-size: 54px;
-    }
-    
-    .hero p {
-        font-size: 24px;
-    }
-    
-    .hero .cta-button {
-        padding: 22px 44px;
-        font-size: 20px;
-    }
-}
-
-/* Touch and interaction improvements */
-@media (hover: hover) and (pointer: fine) {
-    .nav-links a:hover {
-        background: rgba(0, 212, 255, 0.1);
-        color: var(--primary-color);
-    }
-    
-    .hero .cta-button:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-xl);
-    }
-}
-
-/* Reduce motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-    
-    .hero .cta-button:hover {
-        transform: none;
-    }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    :root {
-        --border-light: #ffffff;
-        --text-muted: #ffffff;
-    }
-}
-
-/* Dark mode preference (additional support) */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-primary: #000000;
-        --text-primary: #ffffff;
-    }
 }

@@ -178,7 +178,10 @@
         <div class="tab-content" id="messages">
             <div class="content-header">
                 <h2>Client Messages</h2>
-                <button class="primary-btn" onclick="openNewMessage()">New Message</button>
+                <div class="header-actions">
+                    <button class="primary-btn" onclick="openNewMessage()">New Message</button>
+                    <button class="secondary-btn" onclick="openFileSender()">Send File</button>
+                </div>
             </div>
             
             <div class="messages-layout">
@@ -497,6 +500,66 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Sender Modal -->
+<div class="modal" id="fileSenderModal" style="display: none;">
+    <div class="modal-content file-sender-modal">
+        <div class="modal-header">
+            <h2>Send File to Client</h2>
+            <button class="close-btn" onclick="closeModal('fileSenderModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="fileSenderForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="clientSelect">Select Client:</label>
+                    <select id="clientSelect" name="clientId" required>
+                        <option value="">Choose a client...</option>
+                        <% if (clients && clients.length > 0) { %>
+                            <% clients.forEach(client => { %>
+                                <option value="<%= client.clientId %>"><%= client.name %> (<%= client.email %>)</option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fileInput">Select File:</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" name="file" required>
+                        <div class="file-input-display">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="fileInputText">Click to select file or drag & drop</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fileMessage">Message (Optional):</label>
+                    <textarea id="fileMessage" name="message" placeholder="Add a message with this file..." rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fileCategory">File Category:</label>
+                    <select id="fileCategory" name="category">
+                        <option value="document">Document</option>
+                        <option value="template">Template</option>
+                        <option value="report">Report</option>
+                        <option value="instruction">Instruction</option>
+                        <option value="data">Data File</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('fileSenderModal')">Cancel</button>
+            <button class="btn-primary" onclick="sendFileToClient()">
+                <i class="fas fa-paper-plane"></i>
+                Send File
+            </button>
         </div>
     </div>
 </div>

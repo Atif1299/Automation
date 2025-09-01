@@ -108,7 +108,10 @@ router.post('/client/login',
 
             // Find client by email
             const client = await Client.findOne({ email });
+            console.log('🔍 Client lookup:', { email, found: !!client });
+            
             if (!client) {
+                console.log('❌ No client found with email:', email);
                 return res.status(401).json({
                     error: 'Invalid credentials',
                     code: 'INVALID_CREDENTIALS'
@@ -119,8 +122,15 @@ router.post('/client/login',
             const accountCredential = client.credentials.find(
                 cred => cred.platform === 'account'
             );
+            
+            console.log('🔍 Account credentials check:', {
+                hasCredentials: !!accountCredential,
+                credentialsCount: client.credentials.length,
+                platforms: client.credentials.map(c => c.platform)
+            });
 
             if (!accountCredential) {
+                console.log('❌ No account credential found');
                 return res.status(401).json({
                     error: 'Account not properly configured',
                     code: 'ACCOUNT_ERROR'
@@ -169,7 +179,7 @@ router.post('/client/login',
 
             // Log login
             await client.addActivityLog(
-                'login',
+                'success',
                 'Client logged in successfully',
                 `Login from IP: ${req.ip}`
             );

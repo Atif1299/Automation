@@ -226,16 +226,25 @@ router.post('/:id/send-message', async (req, res) => {
         const clientId = req.params.id;
         const { message } = req.body;
         
+        console.log('📧 Send message request received:');
+        console.log('Client ID:', clientId);
+        console.log('Message:', message);
+        
         if (!message || !message.trim()) {
+            console.log('❌ Empty message received');
             return res.status(400).json({ error: 'Message cannot be empty' });
         }
         
         // Find client
+        console.log('🔍 Looking for client with ID:', clientId);
         const client = await Client.findByClientId(clientId);
         
         if (!client) {
+            console.log('❌ Client not found with ID:', clientId);
             return res.status(404).json({ error: 'Client not found' });
         }
+        
+        console.log('✅ Client found:', client.email);
         
         // Add client message to activity logs
         const clientMessage = {
@@ -249,9 +258,12 @@ router.post('/:id/send-message', async (req, res) => {
         client.activityLogs.push(clientMessage);
         await client.save();
         
+        console.log('✅ Message saved successfully');
         res.json({ success: true, message: 'Message sent successfully' });
     } catch (error) {
         console.error('❌ Error sending message:', error);
+        console.error('Error details:', error.message);
+        console.error('Stack trace:', error.stack);
         res.status(500).json({ error: 'Failed to send message' });
     }
 });

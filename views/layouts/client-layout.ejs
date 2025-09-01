@@ -18,19 +18,18 @@
                 <h3>Menu</h3>
             </div>
             <ul>
-                <li><a href="#credentials">Credentials</a></li>
-                <li><a href="#upload">Upload Files</a></li>
-                <li><a href="#note">Note</a></li>
-                <li><a href="#activity">Activity</a></li>
-                <li><a href="#messages" class="admin-messages-link">Admin Messages</a></li>
+                <li><a href="#credentials" class="nav-item active" data-tab="credentials">Platform Setup</a></li>
+                <li><a href="#upload" class="nav-item" data-tab="upload">File Management</a></li>
+                <li><a href="#note" class="nav-item" data-tab="note">Configuration</a></li>
+                <li><a href="#activity" class="nav-item" data-tab="activity">Activity Monitor</a></li>
+                <li><a href="#messages" class="nav-item" data-tab="messages">Admin Messages</a></li>
             </ul>
         </aside>
         <main class="main-content">
             <div class="dashboard-topbar">
                 <h1>Client Dashboard</h1>
                 <div class="nav-links">
-                    <a href="/admin" class="nav-link">Admin</a>
-                    <a href="/" class="nav-link">Home</a>
+                    <a href="/auth/client-login" class="nav-link logout-btn" onclick="handleLogout(event)">Logout</a>
                 </div>
             </div>
             <%- body %>

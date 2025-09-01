@@ -27,63 +27,71 @@ function switchTab(tabName) {
 
 // Client Management Functions
 function viewClientDetails(clientId) {
-    // Load client data (this would typically fetch from API)
-    loadClientData(clientId);
+    // Show loading state
+    showLoadingInModal();
     
-    // Show modal
+    // Show modal first
     const modal = document.getElementById('clientDetailsModal');
     if (modal) {
         modal.style.display = 'flex';
     }
+    
+    // Load real client data from API
+    loadClientData(clientId);
+}
+
+function showLoadingInModal() {
+    const loadingHTML = `
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary-color);"></i>
+            <p>Loading client details...</p>
+        </div>
+    `;
+    
+    // Show loading in all tabs
+    ['overview', 'platforms', 'credentials', 'configurations'].forEach(tabId => {
+        const tab = document.getElementById(tabId);
+        if (tab) {
+            tab.innerHTML = loadingHTML;
+        }
+    });
 }
 
 function loadClientData(clientId) {
-    // This would typically fetch real data from your API
-    const sampleData = {
-        '1': {
-            name: 'John Doe',
-            email: 'john.doe@email.com',
-            joined: '2 months ago',
-            status: 'Active',
-            platforms: [
-                { name: 'Facebook Business', status: 'Connected' },
-                { name: 'Google Ads', status: 'Connected' },
-                { name: 'Instagram Business', status: 'Pending' }
-            ],
-            credentials: [
-                { name: 'Facebook API Key', status: 'Valid' },
-                { name: 'Google OAuth Token', status: 'Valid' }
-            ],
-            configurations: [
-                { name: 'Automation Schedule', value: 'Daily at 9:00 AM' },
-                { name: 'Target Audience', value: 'Business professionals, 25-45 years' }
-            ]
-        },
-        '2': {
-            name: 'Alice Smith',
-            email: 'alice.smith@email.com',
-            joined: '1 month ago',
-            status: 'Active',
-            platforms: [
-                { name: 'LinkedIn Business', status: 'Connected' },
-                { name: 'Twitter Ads', status: 'Connected' },
-                { name: 'Facebook Business', status: 'Connected' }
-            ],
-            credentials: [
-                { name: 'LinkedIn API Key', status: 'Valid' },
-                { name: 'Twitter OAuth Token', status: 'Expired' }
-            ],
-            configurations: [
-                { name: 'Automation Schedule', value: 'Twice daily at 9:00 AM & 6:00 PM' },
-                { name: 'Target Audience', value: 'Tech professionals, 30-50 years' }
-            ]
-        }
-    };
+    // Fetch real data from API
+    fetch(`/admin/clients/${clientId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateClientDetailsModal(data.client);
+            } else {
+                showErrorInModal(data.message || 'Failed to load client data');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching client data:', error);
+            showErrorInModal('Failed to connect to server');
+        });
+}
+
+function showErrorInModal(message) {
+    const errorHTML = `
+        <div class="error-state">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--danger-color);"></i>
+            <p>Error: ${message}</p>
+            <p style="font-size: 0.9rem; margin-top: 1rem; color: var(--text-muted);">
+                Try refreshing the page or contact support if the problem persists.
+            </p>
+        </div>
+    `;
     
-    const clientData = sampleData[clientId];
-    if (clientData) {
-        updateClientDetailsModal(clientData);
-    }
+    // Show error in all tabs
+    ['overview', 'platforms', 'credentials', 'configurations'].forEach(tabId => {
+        const tab = document.getElementById(tabId);
+        if (tab) {
+            tab.innerHTML = errorHTML;
+        }
+    });
 }
 
 function updateClientDetailsModal(clientData) {
@@ -104,12 +112,28 @@ function updateClientDetailsModal(clientData) {
                             <span>${clientData.email}</span>
                         </div>
                         <div class="info-item">
+                            <label>Client ID:</label>
+                            <span>${clientData.clientId}</span>
+                        </div>
+                        <div class="info-item">
                             <label>Joined:</label>
                             <span>${clientData.joined}</span>
                         </div>
                         <div class="info-item">
                             <label>Status:</label>
-                            <span class="status-badge ${clientData.status.toLowerCase()}">${clientData.status}</span>
+                            <span class="status-badge ${clientData.status.toLowerCase()}">${clientData.status.charAt(0).toUpperCase() + clientData.status.slice(1)}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Plan:</label>
+                            <span class="plan-badge">${clientData.plan ? clientData.plan.charAt(0).toUpperCase() + clientData.plan.slice(1) : 'Free'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Total Campaigns:</label>
+                            <span>${clientData.campaigns ? clientData.campaigns.length : 0}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Total Files:</label>
+                            <span>${clientData.uploadedFiles ? clientData.uploadedFiles.length : 0}</span>
                         </div>
                     </div>
                 </div>
@@ -117,51 +141,165 @@ function updateClientDetailsModal(clientData) {
         `;
     }
     
-    // Update platforms tab
+    // Update platforms tab (using credentials data - exclude account type)
     const platformsTab = document.getElementById('platforms');
     if (platformsTab) {
-        const platformsHTML = clientData.platforms.map(platform => `
-            <div class="platform-item">
-                <div>
-                    <h4>${platform.name}</h4>
-                    <p>Status: ${platform.status}</p>
+        // Filter out 'account' type credentials - only show platform automation credentials
+        const platformCredentials = clientData.credentials ? 
+            clientData.credentials.filter(credential => credential.platform !== 'account') : [];
+            
+        if (platformCredentials.length > 0) {
+            const platformsHTML = platformCredentials.map((credential, index) => {
+                const statusClass = credential.connectionStatus || 'pending';
+                const statusText = credential.connectionStatus ? 
+                    credential.connectionStatus.charAt(0).toUpperCase() + credential.connectionStatus.slice(1) : 
+                    'Pending';
+                
+                // Format platform name properly
+                let platformDisplayName = credential.platform.charAt(0).toUpperCase() + credential.platform.slice(1);
+                if (credential.platform === 'linkedin') platformDisplayName = 'LinkedIn';
+                if (credential.platform === 'facebook') platformDisplayName = 'Facebook';
+                if (credential.platform === 'instagram') platformDisplayName = 'Instagram';
+                if (credential.platform === 'twitter') platformDisplayName = 'Twitter';
+                if (credential.platform === 'email') platformDisplayName = 'Email Marketing';
+                
+                return `
+                    <div class="platform-item">
+                        <div class="platform-info">
+                            <div class="platform-header">
+                                <h4>${platformDisplayName}</h4>
+                                <span class="platform-status ${statusClass}">●</span>
+                            </div>
+                            <div class="credential-details">
+                                <div class="credential-row">
+                                    <label>Username/Email:</label>
+                                    <span class="credential-value">${credential.username}</span>
+                                </div>
+                                <div class="credential-row">
+                                    <label>Password:</label>
+                                    <span class="credential-value">${credential.password}</span>
+                                </div>
+                                ${credential.lastTested ? `
+                                <div class="credential-row">
+                                    <label>Last Tested:</label>
+                                    <span class="credential-value">${new Date(credential.lastTested).toLocaleDateString()}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            platformsTab.innerHTML = `<div class="platforms-list">${platformsHTML}</div>`;
+        } else {
+            platformsTab.innerHTML = `
+                <div class="no-platforms">
+                    <i class="fas fa-share-alt"></i>
+                    <p>No platform credentials added yet.</p>
+                    <small>Client hasn't set up any platform automation credentials.</small>
                 </div>
-                <span class="platform-status ${platform.status.toLowerCase()}">●</span>
-            </div>
-        `).join('');
-        
-        platformsTab.innerHTML = `<div class="platforms-list">${platformsHTML}</div>`;
+            `;
+        }
     }
     
-    // Update credentials tab
+    // Update credentials tab - show API keys and tokens instead of platform credentials
     const credentialsTab = document.getElementById('credentials');
     if (credentialsTab) {
-        const credentialsHTML = clientData.credentials.map(credential => `
-            <div class="credential-item">
-                <div>
-                    <h4>${credential.name}</h4>
-                    <p>Status: ${credential.status}</p>
+        // For now, show a summary or different view instead of duplicating platform credentials
+        credentialsTab.innerHTML = `
+            <div class="credentials-summary">
+                <div class="summary-card">
+                    <h3>Platform Integration Status</h3>
+                    <div class="integration-stats">
+                        <div class="stat-item">
+                            <label>Total Platforms:</label>
+                            <span>${clientData.credentials ? clientData.credentials.filter(c => c.platform !== 'account').length : 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Active Connections:</label>
+                            <span>${clientData.credentials ? clientData.credentials.filter(c => c.platform !== 'account' && c.isActive).length : 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Last Updated:</label>
+                            <span>${new Date().toLocaleDateString()}</span>
+                        </div>
+                    </div>
                 </div>
-                <button class="action-btn">View</button>
+                
+                <div class="credentials-note">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Platform credentials are managed in the Platforms tab. This section shows integration summary and API status.</p>
+                </div>
             </div>
-        `).join('');
-        
-        credentialsTab.innerHTML = `<div class="credentials-list">${credentialsHTML}</div>`;
+        `;
     }
     
-    // Update configurations tab
+    // Update configurations tab (using campaigns and files data)
     const configurationsTab = document.getElementById('configurations');
     if (configurationsTab) {
-        const configurationsHTML = clientData.configurations.map(config => `
-            <div class="config-item">
-                <div>
-                    <h4>${config.name}</h4>
-                    <p>${config.value}</p>
-                </div>
-            </div>
-        `).join('');
+        let configurationsHTML = '';
         
-        configurationsTab.innerHTML = `<div class="config-list">${configurationsHTML}</div>`;
+        // Show campaigns
+        if (clientData.campaigns && clientData.campaigns.length > 0) {
+            configurationsHTML += '<h4>Active Campaigns</h4>';
+            configurationsHTML += clientData.campaigns.map(campaign => `
+                <div class="config-item">
+                    <div>
+                        <h5>${campaign.name}</h5>
+                        <p>Type: ${campaign.automationType}</p>
+                        <p>Status: ${campaign.status}</p>
+                        ${campaign.instructions ? `<p>Instructions: ${campaign.instructions.substring(0, 100)}${campaign.instructions.length > 100 ? '...' : ''}</p>` : ''}
+                        <p>Created: ${new Date(campaign.createdAt).toLocaleDateString()}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Show uploaded files
+        if (clientData.uploadedFiles && clientData.uploadedFiles.length > 0) {
+            configurationsHTML += '<h4>Uploaded Files</h4>';
+            configurationsHTML += clientData.uploadedFiles.map(file => `
+                <div class="config-item">
+                    <div>
+                        <h5>${file.originalName}</h5>
+                        <p>Size: ${(file.fileSize / 1024).toFixed(2)} KB</p>
+                        <p>Type: ${file.fileType}</p>
+                        <p>Status: ${file.status}</p>
+                        <p>Uploaded: ${new Date(file.uploadDate).toLocaleDateString()}</p>
+                        ${file.processedRows ? `<p>Processed Rows: ${file.processedRows}</p>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Show activity logs (recent 5)
+        if (clientData.activityLogs && clientData.activityLogs.length > 0) {
+            configurationsHTML += '<h4>Recent Activity</h4>';
+            const recentLogs = clientData.activityLogs.slice(-5).reverse();
+            configurationsHTML += recentLogs.map(log => `
+                <div class="config-item">
+                    <div>
+                        <h5>${log.message}</h5>
+                        <p>Type: ${log.type}</p>
+                        ${log.details ? `<p>Details: ${log.details}</p>` : ''}
+                        <p>Time: ${new Date(log.timestamp).toLocaleString()}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        if (configurationsHTML) {
+            configurationsTab.innerHTML = `<div class="config-list">${configurationsHTML}</div>`;
+        } else {
+            configurationsTab.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-cog" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-muted);"></i>
+                    <p>No configurations or activity yet</p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Client hasn't created any campaigns or uploaded files</p>
+                </div>
+            `;
+        }
     }
 }
 
@@ -172,13 +310,127 @@ function closeModal(modalId) {
     }
 }
 
+// Function to toggle password visibility
+function togglePassword(index) {
+    const passwordHidden = document.getElementById(`password-${index}`);
+    const passwordVisible = document.getElementById(`password-visible-${index}`);
+    const eyeIcon = document.getElementById(`eye-icon-${index}`);
+    
+    if (passwordHidden && passwordVisible && eyeIcon) {
+        if (passwordHidden.style.display === 'none') {
+            // Hide password
+            passwordHidden.style.display = 'inline';
+            passwordVisible.style.display = 'none';
+            eyeIcon.className = 'fas fa-eye';
+        } else {
+            // Show password
+            passwordHidden.style.display = 'none';
+            passwordVisible.style.display = 'inline';
+            eyeIcon.className = 'fas fa-eye-slash';
+        }
+    }
+}
+
+// Make functions globally accessible
+window.togglePassword = togglePassword;
+window.openFileSender = openFileSender;
+window.sendFileToClient = sendFileToClient;
+
+// File Sender Functions
+function openFileSender() {
+    const modal = document.getElementById('fileSenderModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setupFileInputHandler();
+    }
+}
+
+function setupFileInputHandler() {
+    const fileInput = document.getElementById('fileInput');
+    const fileInputText = document.getElementById('fileInputText');
+    
+    if (fileInput && fileInputText) {
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                fileInputText.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            } else {
+                fileInputText.textContent = 'Click to select file or drag & drop';
+            }
+        });
+    }
+}
+
+async function sendFileToClient() {
+    const form = document.getElementById('fileSenderForm');
+    const fileInput = document.getElementById('fileInput');
+    const clientSelect = document.getElementById('clientSelect');
+    const messageInput = document.getElementById('fileMessage');
+    const categorySelect = document.getElementById('fileCategory');
+    
+    if (!fileInput.files[0]) {
+        showNotification('Please select a file to send', 'error');
+        return;
+    }
+    
+    if (!clientSelect.value) {
+        showNotification('Please select a client', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('clientId', clientSelect.value);
+    formData.append('message', messageInput.value || '');
+    formData.append('category', categorySelect.value);
+    
+    const sendBtn = document.querySelector('#fileSenderModal .btn-primary');
+    const originalText = sendBtn.innerHTML;
+    
+    try {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        const response = await fetch('/admin/send-file', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('File sent successfully!', 'success');
+            closeModal('fileSenderModal');
+            
+            // Reset form
+            form.reset();
+            document.getElementById('fileInputText').textContent = 'Click to select file or drag & drop';
+        } else {
+            throw new Error(result.message || 'Failed to send file');
+        }
+        
+    } catch (error) {
+        console.error('Error sending file:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+    }
+}
+
 function openClientChat(clientId) {
     switchTab('messages');
     selectClient(clientId);
 }
 
 // Message Management Functions
+// Global variable to track currently selected client
+let currentSelectedClientId = null;
+
 function selectClient(clientId) {
+    // Store the currently selected client ID
+    currentSelectedClientId = clientId;
+    
     // Remove active class from all client items
     document.querySelectorAll('.client-item').forEach(item => {
         item.classList.remove('active');
@@ -188,76 +440,180 @@ function selectClient(clientId) {
     const targetClient = document.querySelector(`[data-client-id="${clientId}"]`);
     if (targetClient) {
         targetClient.classList.add('active');
+        
+        // Remove notification badge when chat is opened
+        const unreadBadge = targetClient.querySelector('.unread-badge');
+        if (unreadBadge) {
+            unreadBadge.style.display = 'none';
+        }
     }
     
-    // Load chat messages for this client
+    // Load client information and messages
+    loadClientInfo(clientId);
     loadClientMessages(clientId);
 }
 
-function loadClientMessages(clientId) {
-    // This would typically fetch real messages from your API
-    const sampleMessages = {
-        '1': [
-            {
-                type: 'client',
-                message: 'Hi, I\'ve completed the platform setup but I\'m having trouble with the credentials section.',
-                time: '2:30 PM'
-            },
-            {
-                type: 'admin',
-                message: 'I can see your setup. Let me help you with the credentials. I\'ll update your configuration now.',
-                time: '2:35 PM'
-            },
-            {
-                type: 'client',
-                message: 'Thank you! That worked perfectly. The automation is running smoothly now.',
-                time: '2:45 PM'
-            }
-        ]
-    };
+async function loadClientInfo(clientId) {
+    try {
+        const response = await fetch(`/admin/clients/${clientId}`);
+        const data = await response.json();
+        
+        if (data.success && data.client) {
+            updateChatHeader(data.client);
+        } else {
+            console.error('Failed to load client info:', data.message);
+        }
+    } catch (error) {
+        console.error('Error loading client info:', error);
+    }
+}
+
+function updateChatHeader(client) {
+    // Update chat header with client info
+    const chatHeader = document.querySelector('.chat-header');
+    if (chatHeader) {
+        const clientName = chatHeader.querySelector('h3');
+        const clientStatus = chatHeader.querySelector('p');
+        
+        if (clientName) {
+            clientName.textContent = `${client.name}`;
+            clientName.setAttribute('data-client-id', client.clientId);
+        }
+        
+        if (clientStatus) {
+            const statusText = client.status === 'active' ? 'ONLINE' : 'OFFLINE';
+            const statusClass = client.status === 'active' ? 'online' : 'offline';
+            clientStatus.innerHTML = `<span class="status-indicator ${statusClass}"></span>${statusText}`;
+        }
+    }
     
-    const messages = sampleMessages[clientId] || [];
-    updateChatMessages(messages);
+    // Update client info in sidebar if needed
+    const selectedClientItem = document.querySelector(`[data-client-id="${client.clientId}"]`);
+    if (selectedClientItem) {
+        const clientNameElement = selectedClientItem.querySelector('h4');
+        const lastMessageElement = selectedClientItem.querySelector('.last-message');
+        
+        if (clientNameElement) {
+            clientNameElement.textContent = client.name;
+        }
+    }
+    
+    // Update message input placeholder to show current client
+    const messageInput = document.querySelector('.message-input');
+    if (messageInput) {
+        messageInput.placeholder = `Type your message to ${client.name}...`;
+    }
+}
+
+async function loadClientMessages(clientId) {
+    try {
+        // Show loading state
+        const chatMessages = document.querySelector('.chat-messages');
+        if (chatMessages) {
+            chatMessages.innerHTML = '<div class="loading-messages"><i class="fas fa-spinner fa-spin"></i> Loading messages...</div>';
+        }
+        
+        // Fetch real messages from API
+        const response = await fetch(`/admin/clients/${clientId}/messages`);
+        const data = await response.json();
+        
+        if (data.success) {
+            updateChatMessages(data.messages || []);
+        } else {
+            // If no specific messages endpoint, show activity logs as messages
+            const clientResponse = await fetch(`/admin/clients/${clientId}`);
+            const clientData = await clientResponse.json();
+            
+            if (clientData.success && clientData.client.activityLogs) {
+                const adminMessages = clientData.client.activityLogs
+                    .filter(log => log.source === 'admin' || log.type === 'admin_message')
+                    .map(log => ({
+                        type: 'admin',
+                        message: log.message,
+                        details: log.details,
+                        time: new Date(log.timestamp).toLocaleTimeString(),
+                        fileInfo: log.fileInfo
+                    }));
+                
+                updateChatMessages(adminMessages);
+            } else {
+                updateChatMessages([]);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading client messages:', error);
+        updateChatMessages([]);
+    }
 }
 
 function updateChatMessages(messages) {
     const chatMessages = document.querySelector('.chat-messages');
-    if (chatMessages) {
-        const messagesHTML = messages.map(msg => `
+    if (!chatMessages) return;
+    
+    if (messages.length === 0) {
+        chatMessages.innerHTML = '<div class="no-messages">No messages yet. Start a conversation!</div>';
+        return;
+    }
+    
+    const messagesHTML = messages.map(msg => {
+        let messageHTML = `
             <div class="message ${msg.type}-message">
                 <div class="message-content">
                     <p>${msg.message}</p>
+                    ${msg.details ? `<div class="message-details">${msg.details}</div>` : ''}
+        `;
+        
+        // Add file download link if available
+        if (msg.fileInfo && msg.fileInfo.downloadPath) {
+            messageHTML += `
+                <div class="message-file-attachment">
+                    <i class="fas fa-paperclip"></i>
+                    <a href="${msg.fileInfo.downloadPath}" download="${msg.fileInfo.originalName}" class="file-link">
+                        ${msg.fileInfo.originalName}
+                    </a>
+                    <span class="file-category">(${msg.fileInfo.category})</span>
+                </div>
+            `;
+        }
+        
+        messageHTML += `
                     <span class="message-time">${msg.time}</span>
                 </div>
             </div>
-        `).join('');
+        `;
         
-        chatMessages.innerHTML = messagesHTML;
-        
-        // Scroll to bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+        return messageHTML;
+    }).join('');
+    
+    chatMessages.innerHTML = messagesHTML;
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function sendMessage() {
+    console.log('SendMessage called');
+    console.log('Current selected client ID:', currentSelectedClientId);
+    
     const messageInput = document.querySelector('.message-input');
     const message = messageInput.value.trim();
+    
+    console.log('Message input:', message);
     
     if (!message) {
         showNotification('Please enter a message', 'error');
         return;
     }
+
+    // Use the currently selected client ID
+    const clientId = currentSelectedClientId;
     
-    // Get selected client ID
-    const clientSelector = document.querySelector('#client-selector');
-    const clientId = clientSelector ? clientSelector.value : null;
+    console.log('Using client ID:', clientId);
     
     if (!clientId) {
         showNotification('Please select a client first', 'error');
         return;
-    }
-    
-    // Send message to backend
+    }    // Send message to backend
     fetch('/admin/message', {
         method: 'POST',
         headers: {
@@ -268,8 +624,15 @@ function sendMessage() {
             message: message
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             // Add message to chat
             const chatMessages = document.querySelector('.chat-messages');
@@ -290,12 +653,13 @@ function sendMessage() {
             
             showNotification('Message sent successfully', 'success');
         } else {
+            console.error('Server error:', data.error);
             showNotification(data.error || 'Failed to send message', 'error');
         }
     })
     .catch(error => {
         console.error('Error sending message:', error);
-        showNotification('Failed to send message', 'error');
+        showNotification('Failed to send message: ' + error.message, 'error');
     });
 }
 
@@ -312,7 +676,7 @@ function updateClientMonitor() {
     const form = document.querySelector('.activity-form');
     if (form) {
         const formData = new FormData(form);
-        const clientId = document.querySelector('.client-selector').value;
+        const clientId = currentSelectedClientId;
         
         if (!clientId) {
             alert('Please select a client first');
@@ -718,7 +1082,33 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Export functions for external use
+// Initialize admin dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize first client selection in messages tab
+    const firstClient = document.querySelector('.client-item[data-client-id]');
+    if (firstClient) {
+        const clientId = firstClient.getAttribute('data-client-id');
+        // Only auto-select if we're in the messages tab
+        const messagesTab = document.getElementById('messages');
+        if (messagesTab && messagesTab.classList.contains('active')) {
+            selectClient(clientId);
+        }
+    }
+    
+    // Add tab switching listener to initialize client selection
+    const messageTabButton = document.querySelector('[data-tab="messages"]');
+    if (messageTabButton) {
+        messageTabButton.addEventListener('click', function() {
+            setTimeout(() => {
+                const firstClient = document.querySelector('.client-item[data-client-id]');
+                if (firstClient && !currentSelectedClientId) {
+                    const clientId = firstClient.getAttribute('data-client-id');
+                    selectClient(clientId);
+                }
+            }, 100);
+        });
+    }
+});
 window.AdminDashboard = {
     switchTab,
     viewClientDetails,
@@ -732,5 +1122,12 @@ window.AdminDashboard = {
     showNotification,
     logout,
     confirmDeleteClient,
-    deleteClient
+    deleteClient,
+    togglePassword,
+    openFileSender,
+    sendFileToClient,
+    loadClientInfo,
+    updateChatHeader,
+    loadClientMessages,
+    updateChatMessages
 };

@@ -1,24 +1,39 @@
 // Enhanced JS for client dashboard
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab functionality
-    const tabBtns = document.querySelectorAll('.tab-btn');
+    // Sidebar navigation functionality
+    const navItems = document.querySelectorAll('.nav-item');
     const tabContents = document.querySelectorAll('.tab-content');
     
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetTab = btn.getAttribute('data-tab');
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetTab = item.getAttribute('data-tab');
+            console.log('Nav item clicked:', targetTab); // Debug log
             
-            // Remove active class from all tabs and contents
-            tabBtns.forEach(b => b.classList.remove('active'));
+            // Remove active class from all nav items and contents
+            navItems.forEach(i => i.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
             
-            // Add active class to clicked tab and corresponding content
-            btn.classList.add('active');
-            document.getElementById(targetTab).classList.add('active');
+            // Add active class to clicked nav item and corresponding content
+            item.classList.add('active');
+            const targetContent = document.getElementById(targetTab);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                console.log('Tab activated:', targetTab); // Debug log
+            } else {
+                console.error('Target tab content not found:', targetTab);
+            }
             
-            // Update progress steps
-            updateProgressStep(targetTab);
+            // Update progress steps (only for first 4 tabs)
+            if (targetTab !== 'messages') {
+                updateProgressStep(targetTab);
+            }
+            
+            // Initialize messages functionality if messages tab is activated
+            if (targetTab === 'messages') {
+                initializeMessagesTab();
+            }
         });
     });
     
@@ -30,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'upload': 1,
             'note': 2,
             'activity': 3
+            // messages tab doesn't need progress step
         };
         
         steps.forEach((step, index) => {
@@ -39,6 +55,118 @@ document.addEventListener('DOMContentLoaded', function() {
                 step.classList.remove('active');
             }
         });
+    }
+
+    // Initialize messages tab functionality
+    function initializeMessagesTab() {
+        const messageForm = document.getElementById('message-form-tab');
+        const messageInput = document.getElementById('message-input-tab');
+        
+        if (messageForm) {
+            // Remove existing listener to avoid duplicates
+            const newForm = messageForm.cloneNode(true);
+            messageForm.parentNode.replaceChild(newForm, messageForm);
+            
+            // Add fresh event listener
+            newForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const message = document.getElementById('message-input-tab').value.trim();
+                if (!message) return;
+                
+                try {
+                    // Get current client ID from URL
+                    const currentPath = window.location.pathname;
+                    const clientId = currentPath.split('/')[2];
+                    
+                    console.log('Current path:', currentPath);
+                    console.log('Extracted client ID:', clientId);
+                    console.log('Sending to URL:', `/client/${clientId}/send-message`);
+                    
+                    const response = await fetch(`/client/${clientId}/send-message`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message })
+                    });
+                    
+                    if (response.ok) {
+                        // Add message to chat
+                        addMessageToTabChat(message, 'client');
+                        
+                        // Clear input
+                        document.getElementById('message-input-tab').value = '';
+                        
+                        // Show success feedback
+                        showNotification('Message sent successfully!', 'success');
+                    } else {
+                        // Get error details from server
+                        const errorData = await response.json();
+                        console.error('Server response:', response.status, errorData);
+                        throw new Error(errorData.error || 'Failed to send message');
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    showNotification('Failed to send message. Please try again.', 'error');
+                }
+            });
+        }
+    }
+
+    // Add message to tab chat
+    function addMessageToTabChat(message, sender) {
+        const messagesList = document.getElementById('messages-list-tab');
+        const noMessages = messagesList.querySelector('.no-messages-tab');
+        
+        if (noMessages) {
+            noMessages.remove();
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        const now = new Date().toLocaleString();
+        
+        if (sender === 'client') {
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender">You</span>
+                        <span class="message-time">${now}</span>
+                    </div>
+                    <div class="message-text">${message}</div>
+                </div>
+                <div class="message-avatar">
+                    <div class="avatar client-avatar">C</div>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <div class="avatar admin-avatar">A</div>
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender">Admin</span>
+                        <span class="message-time">${now}</span>
+                    </div>
+                    <div class="message-text">${message}</div>
+                </div>
+            `;
+        }
+        
+        messagesList.appendChild(messageDiv);
+        
+        // Auto-scroll to bottom
+        const conversationArea = document.querySelector('.conversation-area-tab');
+        conversationArea.scrollTop = conversationArea.scrollHeight;
+    }
+
+    // Show notification
+    function showNotification(message, type) {
+        // You can implement a toast notification here
+        console.log(`${type.toUpperCase()}: ${message}`);
     }
     
     // File upload functionality
@@ -121,6 +249,95 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
     
+    // Load real activity logs from API
+    function loadActivityLogs() {
+        const clientId = window.location.pathname.split('/').pop();
+        
+        fetch(`/client/${clientId}/logs`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.logs) {
+                    displayActivityLogs(data.logs);
+                } else {
+                    console.error('Failed to load activity logs:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading activity logs:', error);
+            });
+    }
+    
+    function displayActivityLogs(logs) {
+        const activityWindow = document.getElementById('activity-window');
+        if (!activityWindow) return;
+        
+        // Clear existing logs
+        activityWindow.innerHTML = '';
+        
+        if (logs.length === 0) {
+            activityWindow.innerHTML = '<p class="no-logs">No activity logs available.</p>';
+            return;
+        }
+        
+        logs.forEach(log => {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${log.type}`;
+            
+            const timeStr = new Date(log.timestamp).toLocaleString();
+            
+            let logHTML = `
+                <div class="log-header">
+                    <span class="log-time">${timeStr}</span>
+                    <span class="log-type ${log.type}">${log.type.toUpperCase()}</span>
+                    ${log.source ? `<span class="log-source ${log.source}">${log.source.toUpperCase()}</span>` : ''}
+                </div>
+                <div class="log-message">${log.message}</div>
+            `;
+            
+            // Add details if available
+            if (log.details) {
+                logHTML += `
+                    <div class="log-details" style="display: none;">
+                        <pre>${log.details}</pre>
+                    </div>
+                `;
+            }
+            
+            // Add file download link if it's an admin file
+            if (log.fileInfo && log.fileInfo.downloadPath) {
+                logHTML += `
+                    <div class="log-file-info">
+                        <i class="fas fa-file-download"></i>
+                        <a href="${log.fileInfo.downloadPath}" download="${log.fileInfo.originalName}" class="file-download-link">
+                            Download: ${log.fileInfo.originalName}
+                        </a>
+                        <span class="file-category">(${log.fileInfo.category})</span>
+                    </div>
+                `;
+            }
+            
+            logEntry.innerHTML = logHTML;
+            
+            // Add click event for expanding details
+            logEntry.addEventListener('click', () => {
+                const details = logEntry.querySelector('.log-details');
+                if (details) {
+                    details.style.display = details.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+            
+            activityWindow.appendChild(logEntry);
+        });
+    }
+    
+    // Load logs when Activity Monitor tab is opened
+    if (document.getElementById('activity-monitor')) {
+        loadActivityLogs();
+        
+        // Reload logs every 30 seconds for real-time updates
+        setInterval(loadActivityLogs, 30000);
+    }
+    
     // Activity log functionality
     const logEntries = document.querySelectorAll('.log-entry');
     logEntries.forEach(entry => {
@@ -178,6 +395,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add new log entry function
     function addLogEntry(type, message, details = null) {
         const activityWindow = document.getElementById('activity-window');
+        
+        // Check if activity window exists (not in messages view)
+        if (!activityWindow) {
+            console.log(`Log Entry (${type}): ${message}`);
+            return;
+        }
+        
         const now = new Date();
         const timeStr = now.toISOString().replace('T', ' ').split('.')[0];
         
@@ -370,59 +594,74 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Admin Messages sidebar link handler
-    const adminMessagesLink = document.querySelector('.admin-messages-link');
-    if (adminMessagesLink) {
-        adminMessagesLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Get current client ID from URL or data attribute
-            const currentPath = window.location.pathname;
-            const clientId = currentPath.split('/')[2]; // Extract client ID from /client/:id
-            
-            if (clientId) {
-                loadMessagesContent(clientId);
-            } else {
-                console.error('Client ID not found');
-            }
-        });
-    }
-
-    // Handle other sidebar links to return to dashboard
-    const sidebarLinks = document.querySelectorAll('.sidebar a:not(.admin-messages-link)');
+    // Simple sidebar navigation for existing tabs
+    const sidebarLinks = document.querySelectorAll('.sidebar a');
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             
             const targetSection = this.getAttribute('href').substring(1); // Remove #
             
-            // If we're in messages view, reload the dashboard
-            if (document.querySelector('.messages-container')) {
-                loadDashboardContent(targetSection);
-            } else {
-                // Normal tab switching
-                const targetTab = document.querySelector(`[data-tab="${targetSection}"]`);
-                if (targetTab) {
-                    targetTab.click();
-                }
+            // Activate the corresponding tab
+            const targetTab = document.querySelector(`[data-tab="${targetSection}"]`);
+            if (targetTab) {
+                targetTab.click();
             }
         });
     });
 
+    // OLD COMPLEX NAVIGATION FUNCTIONS - DISABLED FOR SIMPLE TAB APPROACH
+    /*
     // Function to load dashboard content
     async function loadDashboardContent(activeTab = 'credentials') {
         try {
-            showLoadingState();
+            showDashboardLoadingState();
             
-            // Update sidebar active state
-            updateSidebarActiveState(activeTab);
+            // Get current client ID from URL
+            const currentPath = window.location.pathname;
+            const clientId = currentPath.split('/')[2];
             
-            // Get original dashboard content (you might want to store this or fetch it)
-            location.reload(); // For now, reload to get back to dashboard
+            // Fetch dashboard content
+            const response = await fetch(`/client/${clientId}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to load dashboard');
+            }
+            
+            const html = await response.text();
+            
+            // Extract dashboard content from the response
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const dashboardHTML = tempDiv.querySelector('.dashboard-content');
+            
+            if (dashboardHTML) {
+                // Replace main content with smooth transition
+                await replaceDashboardContent(dashboardHTML.innerHTML);
+                
+                // Reinitialize dashboard functionality - DISABLED FOR SIMPLE TAB APPROACH
+                // initializeDashboard();
+                
+                // Activate the correct tab
+                setTimeout(() => {
+                    const targetTab = document.querySelector(`[data-tab="${activeTab}"]`);
+                    if (targetTab) {
+                        targetTab.click();
+                    }
+                }, 100);
+                
+                // Update sidebar active state
+                updateSidebarActiveState(activeTab);
+                
+                // Update page title
+                document.title = 'Client Dashboard';
+            } else {
+                throw new Error('Dashboard content not found');
+            }
             
         } catch (error) {
             console.error('Error loading dashboard:', error);
-            showErrorState('Failed to load dashboard. Please refresh the page.');
+            showErrorState('Failed to load dashboard. Please try again.');
         }
     }
 
@@ -479,6 +718,26 @@ document.addEventListener('DOMContentLoaded', function() {
         dashboardContent.style.transform = 'translateY(0)';
     }
 
+    // Function to replace dashboard content with smooth transition
+    async function replaceDashboardContent(newHTML) {
+        const mainContent = document.querySelector('.main-content');
+        const dashboardContent = mainContent.querySelector('.dashboard-content');
+        
+        // Fade out current content
+        dashboardContent.style.opacity = '0';
+        dashboardContent.style.transform = 'translateY(20px)';
+        
+        // Wait for fade out animation
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Replace content
+        dashboardContent.innerHTML = newHTML;
+        
+        // Fade in new content
+        dashboardContent.style.opacity = '1';
+        dashboardContent.style.transform = 'translateY(0)';
+    }
+
     // Function to show loading state
     function showLoadingState() {
         const mainContent = document.querySelector('.main-content');
@@ -488,6 +747,19 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="loading-container">
                 <div class="loading-spinner"></div>
                 <p>Loading messages...</p>
+            </div>
+        `;
+    }
+
+    // Function to show dashboard loading state
+    function showDashboardLoadingState() {
+        const mainContent = document.querySelector('.main-content');
+        const dashboardContent = mainContent.querySelector('.dashboard-content');
+        
+        dashboardContent.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading dashboard...</p>
             </div>
         `;
     }
@@ -648,6 +920,71 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
     
+    // Function to reinitialize dashboard functionality after dynamic loading
+    function initializeDashboard() {
+        // Re-initialize tab switching
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            // Remove existing listeners to avoid duplicates
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            newButton.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+                
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+                
+                // Update URL hash without triggering page reload
+                if (history.pushState) {
+                    history.pushState(null, null, `#${targetTab}`);
+                }
+                
+                // Update sidebar active state
+                updateSidebarActiveState(targetTab);
+            });
+        });
+
+        // Re-initialize file upload functionality
+        const fileInput = document.getElementById('file-upload');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadProgress = document.getElementById('upload-progress');
+        
+        if (uploadBtn) {
+            // Remove existing listeners
+            const newUploadBtn = uploadBtn.cloneNode(true);
+            uploadBtn.parentNode.replaceChild(newUploadBtn, uploadBtn);
+            
+            newUploadBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+        }
+
+        if (fileInput) {
+            // Remove existing listeners
+            const newFileInput = fileInput.cloneNode(true);
+            fileInput.parentNode.replaceChild(newFileInput, fileInput);
+            
+            newFileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    uploadFile(this.files[0]);
+                }
+            });
+        }
+
+        // Re-initialize any other dashboard-specific functionality here
+        console.log('Dashboard functionality reinitialized');
+    }
+
+    // END OF OLD COMPLEX FUNCTIONS */
+
     // Real-time updates simulation
     setInterval(() => {
         const messages = [
@@ -663,3 +1000,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 5000);
 });
+
+// Logout functionality (global function)
+function handleLogout(event) {
+    event.preventDefault();
+    
+    // Clear any stored authentication data
+    localStorage.removeItem('authToken');
+    sessionStorage.clear();
+    
+    // Show confirmation
+    if (confirm('Are you sure you want to logout?')) {
+        // Redirect to landing page
+        window.location.href = '/';
+    }
+}

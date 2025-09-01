@@ -70,14 +70,15 @@ body {
 
 /* Base Auth Layout */
 .auth-main-content {
-    height: calc(100vh - 70px); /* Exact viewport height minus nav */
+    height: 89.5vh; /* Full viewport height */
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--gradient-bg);
     padding: 0; /* Remove padding to prevent overflow */
     position: relative;
-    margin-top: 70px; /* Account for navigation bar height */
+    padding-top: 70px; /* Account for navigation bar height using padding instead of margin */
+    box-sizing: border-box; /* Include padding in height calculation */
     overflow: hidden; /* Prevent any scrolling */
 }
 
@@ -108,13 +109,13 @@ body {
 }
 
 .auth-card-container.large {
-    width: min(950px, 90vw); /* Responsive width */
-    height: min(600px, 80vh); /* Responsive height */
+    width: min(950px, 80vw); /* Responsive width */
+    height: min(650px, 65vh); /* Better height for register page */
 }
 
 .auth-form-section {
     flex: 1;
-    padding: 40px 50px; /* Reduced padding for better fit */
+    padding: 35px 45px; /* Optimized padding for better fit */
     background: var(--bg-secondary);
     display: flex;
     flex-direction: column;
@@ -137,8 +138,10 @@ body {
 }
 
 .auth-form-section.compact {
-    padding: 30px 40px; /* Reduced padding for registration form */
+    padding: 25px 35px; /* More compact padding for register */
     overflow-y: auto;
+    justify-content: flex-start; /* Start from top for better form layout */
+    padding-top: 20px; /* Reduced top padding */
 }
 
 .auth-welcome-section {
@@ -214,6 +217,13 @@ body {
     line-height: 1.2;
 }
 
+/* Compact title for register page */
+.auth-form-section.compact .auth-title {
+    font-size: 2.2rem;
+    margin-bottom: 1.2rem;
+    margin-top: 0;
+}
+
 .welcome-title {
     font-size: 3rem;
     font-weight: 800;
@@ -236,12 +246,18 @@ body {
 
 /* Form Elements */
 .form-group {
-    margin-bottom: 1.5rem; /* Reduced margin for better fit */
+    margin-bottom: 1.3rem; /* Optimized margin for better fit */
     position: relative;
 }
 
 .form-group.compact {
-    margin-bottom: 1.2rem; /* Even smaller for registration */
+    margin-bottom: 1rem; /* Compact spacing for registration */
+}
+
+/* Compact input styling for register page */
+.form-group.compact input {
+    padding: 14px 45px 14px 14px; /* Slightly smaller padding */
+    font-size: 0.95rem;
 }
 
 .form-group input {
@@ -456,9 +472,9 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
     .auth-main-content {
-        margin-top: 70px; /* Slightly less margin on mobile */
-        height: calc(100vh - 70px); /* Adjust for smaller nav */
-        padding: 0;
+        padding-top: 70px; /* Use padding instead of margin on mobile */
+        height: 100vh; /* Full viewport height */
+        box-sizing: border-box;
     }
     
     .auth-card-container {
@@ -472,6 +488,7 @@ body {
     
     .auth-card-container.large {
         max-width: 420px;
+        height: 90vh; /* Better height for register on mobile */
     }
     
     .auth-welcome-section {
@@ -503,7 +520,8 @@ body {
     }
     
     .auth-form-section.compact {
-        padding: 20px 15px; /* More compact for registration */
+        padding: 15px 20px; /* Better mobile spacing for register */
+        padding-top: 10px; /* Minimal top padding */
     }
     
     .auth-title {
@@ -528,9 +546,9 @@ body {
 
 @media (max-width: 480px) {
     .auth-main-content {
-        padding: 0;
-        margin-top: 65px; /* Even less margin on very small screens */
-        height: calc(100vh - 65px);
+        padding-top: 65px; /* Use padding instead of margin on very small screens */
+        height: 100vh; /* Full viewport height */
+        box-sizing: border-box;
     }
     
     .auth-card-container {

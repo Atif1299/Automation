@@ -1,0 +1,40 @@
+WELCOME TO THE AUTOMATION PLATFORM
+====================================
+
+Getting Started Guide
+=====================
+
+1. Setting Up Your Account
+   - Complete your profile information
+   - Verify your email address
+   - Connect your social media platforms
+
+2. Platform Connections
+   - Facebook Business Manager
+   - LinkedIn Sales Navigator
+   - Twitter API access
+   - Instagram Business Account
+
+3. Creating Your First Campaign
+   - Choose automation type (Outreach, Enrichment, Scraping)
+   - Upload your contact list
+   - Configure targeting parameters
+   - Set automation schedule
+
+4. Monitoring and Analytics
+   - Real-time activity monitoring
+   - Performance analytics
+   - Success rate tracking
+   - Error handling and notifications
+
+5. Support and Resources
+   - 24/7 customer support
+   - Video tutorials
+   - Best practices guide
+   - Community forum
+
+For technical support, contact us at support@automation-platform.com
+For sales inquiries, reach out to sales@automation-platform.com
+
+Happy automating!
+The Automation Platform Team

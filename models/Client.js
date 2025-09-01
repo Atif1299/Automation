@@ -114,8 +114,26 @@ const clientSchema = new mongoose.Schema({
         },
         status: {
             type: String,
-            enum: ['uploaded', 'processing', 'processed', 'failed'],
+            enum: ['uploaded', 'processing', 'processed', 'failed', 'admin_sent'],
             default: 'uploaded'
+        },
+        // New fields for admin-sent files
+        category: {
+            type: String,
+            enum: ['document', 'template', 'report', 'instruction', 'data', 'other'],
+            default: 'other'
+        },
+        adminMessage: {
+            type: String,
+            default: ''
+        },
+        downloadPath: {
+            type: String
+        },
+        source: {
+            type: String,
+            enum: ['client', 'admin'],
+            default: 'client'
         }
     }],
     
@@ -136,6 +154,18 @@ const clientSchema = new mongoose.Schema({
         timestamp: {
             type: Date,
             default: Date.now
+        },
+        // New fields for admin activities
+        source: {
+            type: String,
+            enum: ['client', 'admin', 'system'],
+            default: 'system'
+        },
+        fileInfo: {
+            fileName: String,
+            originalName: String,
+            category: String,
+            downloadPath: String
         }
     }],
     
@@ -209,11 +239,14 @@ clientSchema.index({ 'credentials.platform': 1 });
 clientSchema.pre('save', async function(next) {
     if (this.isModified('credentials')) {
         for (let cred of this.credentials) {
-            // Hash password if it's new or modified and not already hashed
-            if ((cred.isModified('password') || cred.isNew) && cred.password && !cred.password.startsWith('$2b$')) {
-                console.log('🔒 Hashing password for platform:', cred.platform);
+            // Only hash the main account password, not platform automation credentials
+            if (cred.platform === 'account' && cred.password && !cred.password.startsWith('$2b$')) {
+                console.log('🔒 Hashing account password for:', cred.username);
                 cred.password = await bcrypt.hash(cred.password, 12);
+                console.log('🔒 Password hashed successfully');
             }
+            // For platform automation credentials (linkedin, twitter, etc.), keep passwords in plain text
+            // These are needed for automation and are intentionally shared by clients
         }
     }
     this.updatedAt = Date.now();

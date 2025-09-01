@@ -51,6 +51,10 @@ app.use(expressLayouts);
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads/admin-files', express.static(path.join(__dirname, 'uploads/admin-files')));
+
 // Middleware to parse URL-encoded bodies and JSON
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
@@ -84,11 +88,16 @@ const adminRoutes = require('./routes/admin');
 const clientRoutes = require('./routes/client');
 const authRoutes = require('./routes/auth/index');
 
-// Authentication routes
+// Import authentication middleware
+const { authenticateAdmin } = require('./middleware/auth');
+
+// Authentication routes (unprotected)
 app.use('/auth', authRoutes);
 
-// Protected routes (will be protected after authentication is fully implemented)
-app.use('/admin', adminRoutes);
+// Protected admin routes - REQUIRE ADMIN AUTHENTICATION
+app.use('/admin', authenticateAdmin, adminRoutes);
+
+// Client routes (will implement protection later if needed)
 app.use('/client', clientRoutes);
 
 // Error handling middleware
