@@ -133,6 +133,15 @@
                                 <div class="client-actions">
                                     <button class="action-btn view-btn" onclick="viewClientDetails('<%= client.clientId %>')">View</button>
                                     <button class="action-btn message-btn" onclick="openClientChat('<%= client.clientId %>')">Message</button>
+                                    <button class="action-btn delete-btn" onclick="confirmDeleteClient('<%= client.clientId %>', '<%= client.name %>')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                            <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                             <div class="client-stats">
@@ -169,7 +178,10 @@
         <div class="tab-content" id="messages">
             <div class="content-header">
                 <h2>Client Messages</h2>
-                <button class="primary-btn" onclick="openNewMessage()">New Message</button>
+                <div class="header-actions">
+                    <button class="primary-btn" onclick="openNewMessage()">New Message</button>
+                    <button class="secondary-btn" onclick="openFileSender()">Send File</button>
+                </div>
             </div>
             
             <div class="messages-layout">
@@ -488,6 +500,120 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Sender Modal -->
+<div class="modal" id="fileSenderModal" style="display: none;">
+    <div class="modal-content file-sender-modal">
+        <div class="modal-header">
+            <h2>Send File to Client</h2>
+            <button class="close-btn" onclick="closeModal('fileSenderModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="fileSenderForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="clientSelect">Select Client:</label>
+                    <select id="clientSelect" name="clientId" required>
+                        <option value="">Choose a client...</option>
+                        <% if (clients && clients.length > 0) { %>
+                            <% clients.forEach(client => { %>
+                                <option value="<%= client.clientId %>"><%= client.name %> (<%= client.email %>)</option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fileInput">Select File:</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" name="file" required>
+                        <div class="file-input-display">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="fileInputText">Click to select file or drag & drop</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fileMessage">Message (Optional):</label>
+                    <textarea id="fileMessage" name="message" placeholder="Add a message with this file..." rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fileCategory">File Category:</label>
+                    <select id="fileCategory" name="category">
+                        <option value="document">Document</option>
+                        <option value="template">Template</option>
+                        <option value="report">Report</option>
+                        <option value="instruction">Instruction</option>
+                        <option value="data">Data File</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('fileSenderModal')">Cancel</button>
+            <button class="btn-primary" onclick="sendFileToClient()">
+                <i class="fas fa-paper-plane"></i>
+                Send File
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Client Confirmation Modal -->
+<div class="modal" id="deleteClientModal">
+    <div class="modal-content delete-modal">
+        <div class="modal-header">
+            <h2>⚠️ Delete Client Account</h2>
+            <button class="close-btn" onclick="closeModal('deleteClientModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="delete-warning">
+                <div class="warning-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L2 7V10C2 16 6 20.5 12 22C18 20.5 22 16 22 10V7L12 2Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 8V12" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 16H12.01" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h3>This action cannot be undone!</h3>
+                <p>You are about to permanently delete the client account for:</p>
+                <div class="client-to-delete">
+                    <strong id="deleteClientName"></strong>
+                    <span id="deleteClientEmail"></span>
+                </div>
+                <div class="deletion-details">
+                    <h4>The following data will be permanently deleted:</h4>
+                    <ul>
+                        <li>✗ Client account and profile information</li>
+                        <li>✗ All platform credentials and connections</li>
+                        <li>✗ Campaign configurations and history</li>
+                        <li>✗ All uploaded files and processed data</li>
+                        <li>✗ Chat messages and communication history</li>
+                        <li>✗ Activity logs and analytics data</li>
+                    </ul>
+                </div>
+                <div class="confirmation-input">
+                    <label for="deleteConfirmation">Type <strong>DELETE</strong> to confirm:</label>
+                    <input type="text" id="deleteConfirmation" placeholder="Type DELETE here" autocomplete="off">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('deleteClientModal')">Cancel</button>
+            <button class="btn-danger" id="confirmDeleteBtn" onclick="deleteClient()" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 6H5H21" stroke="currentColor" stroke-width="2"/>
+                    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M10 11V17" stroke="currentColor" stroke-width="2"/>
+                    <path d="M14 11V17" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Delete Client Forever
+            </button>
         </div>
     </div>
 </div>

@@ -27,7 +27,7 @@ const clientSchema = new mongoose.Schema({
         platform: {
             type: String,
             required: true,
-            enum: ['linkedin', 'twitter', 'email', 'facebook', 'instagram']
+            enum: ['account', 'linkedin', 'twitter', 'email', 'facebook', 'instagram']
         },
         username: {
             type: String,
@@ -114,8 +114,26 @@ const clientSchema = new mongoose.Schema({
         },
         status: {
             type: String,
-            enum: ['uploaded', 'processing', 'processed', 'failed'],
+            enum: ['uploaded', 'processing', 'processed', 'failed', 'admin_sent'],
             default: 'uploaded'
+        },
+        // New fields for admin-sent files
+        category: {
+            type: String,
+            enum: ['document', 'template', 'report', 'instruction', 'data', 'other'],
+            default: 'other'
+        },
+        adminMessage: {
+            type: String,
+            default: ''
+        },
+        downloadPath: {
+            type: String
+        },
+        source: {
+            type: String,
+            enum: ['client', 'admin'],
+            default: 'client'
         }
     }],
     
@@ -136,14 +154,26 @@ const clientSchema = new mongoose.Schema({
         timestamp: {
             type: Date,
             default: Date.now
+        },
+        // New fields for admin activities
+        source: {
+            type: String,
+            enum: ['client', 'admin', 'system'],
+            default: 'system'
+        },
+        fileInfo: {
+            fileName: String,
+            originalName: String,
+            category: String,
+            downloadPath: String
         }
     }],
     
     // Client Status
     status: {
         type: String,
-        enum: ['active', 'inactive', 'suspended'],
-        default: 'active'
+        enum: ['active', 'inactive', 'suspended', 'pending_verification'],
+        default: 'pending_verification'
     },
     
     // Subscription/Plan
@@ -158,12 +188,43 @@ const clientSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    lastLogin: {
-        type: Date
-    },
     updatedAt: {
         type: Date,
         default: Date.now
+    },
+    
+    // Authentication & Security
+    lastLogin: {
+        type: Date
+    },
+    emailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: {
+        type: String
+    },
+    passwordResetToken: {
+        type: String
+    },
+    passwordResetExpires: {
+        type: Date
+    },
+    
+    // Subscription & Billing
+    plan: {
+        type: String,
+        enum: ['free', 'basic', 'premium', 'enterprise'],
+        default: 'free'
+    },
+    planExpiry: {
+        type: Date
+    },
+    billingInfo: {
+        customerId: String,
+        subscriptionId: String,
+        lastPayment: Date,
+        nextPayment: Date
     }
 }, {
     timestamps: true,
@@ -178,9 +239,14 @@ clientSchema.index({ 'credentials.platform': 1 });
 clientSchema.pre('save', async function(next) {
     if (this.isModified('credentials')) {
         for (let cred of this.credentials) {
-            if (cred.isModified('password') || cred.isNew) {
+            // Only hash the main account password, not platform automation credentials
+            if (cred.platform === 'account' && cred.password && !cred.password.startsWith('$2b$')) {
+                console.log('🔒 Hashing account password for:', cred.username);
                 cred.password = await bcrypt.hash(cred.password, 12);
+                console.log('🔒 Password hashed successfully');
             }
+            // For platform automation credentials (linkedin, twitter, etc.), keep passwords in plain text
+            // These are needed for automation and are intentionally shared by clients
         }
     }
     this.updatedAt = Date.now();

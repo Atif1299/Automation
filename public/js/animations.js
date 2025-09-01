@@ -34,30 +34,39 @@ class ProfessionalAnimations {
         });
     }
 
-    // Parallax scrolling effects
+    // Parallax scrolling effects - Compatible with UltraSmoothScroll
     setupParallaxEffects() {
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
+        const updateParallax = (scrollPosition) => {
+            const scrolled = scrollPosition || window.pageYOffset;
             const rate = scrolled * -0.5;
             
             const hero = document.querySelector('.hero::before');
             if (hero) {
                 hero.style.transform = `translateY(${rate}px)`;
             }
-        });
+        };
+        
+        // Listen to both regular scroll and smooth scroll events
+        window.addEventListener('scroll', () => updateParallax());
+        window.addEventListener('smoothscroll', (e) => updateParallax(e.detail.scrollY));
     }
 
-    // Smooth scrolling for internal links
+    // Smooth scrolling for internal links - Enhanced for SimpleSmoothScroll
     setupSmoothScrolling() {
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                    // Use SimpleSmoothScroll if available, fallback to browser smooth scroll
+                    if (window.simpleSmoothScroll) {
+                        window.simpleSmoothScroll.scrollToElement(target, -80); // Offset for header
+                    } else {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
                 }
             });
         });
@@ -202,10 +211,37 @@ class ParticleSystem {
     }
 }
 
-// Loading screen
+// Loading screen - Only show on initial site visit
 class LoadingScreen {
     constructor() {
-        this.createLoadingScreen();
+        // Only show loader on initial site visit, not during navigation
+        // Reset on new tab/window or after long inactivity
+        this.shouldShowLoader = this.checkIfShouldShowLoader();
+        
+        if (this.shouldShowLoader) {
+            this.createLoadingScreen();
+            this.markVisited();
+        }
+    }
+    
+    checkIfShouldShowLoader() {
+        const visited = sessionStorage.getItem('siteVisited');
+        const visitTime = sessionStorage.getItem('visitTime');
+        const currentTime = Date.now();
+        
+        // Show loader if:
+        // 1. Never visited in this session
+        // 2. Last visit was more than 30 minutes ago (session likely expired)
+        if (!visited || !visitTime || (currentTime - parseInt(visitTime)) > 30 * 60 * 1000) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    markVisited() {
+        sessionStorage.setItem('siteVisited', 'true');
+        sessionStorage.setItem('visitTime', Date.now().toString());
     }
 
     createLoadingScreen() {
@@ -214,7 +250,7 @@ class LoadingScreen {
         loader.innerHTML = `
             <div class="loader-content">
                 <div class="loader-spinner"></div>
-                <p>Loading...</p>
+                <p>Loading LinkedIn Automation Platform...</p>
             </div>
         `;
         
@@ -251,11 +287,17 @@ class LoadingScreen {
             
             .loader-content p {
                 font-family: 'Poppins', sans-serif;
-                font-size: 18px;
+                font-size: 16px;
                 font-weight: 500;
                 color: #e6edf3;
                 margin: 0;
                 letter-spacing: 0.5px;
+                opacity: 0.9;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
             }
         `;
         
@@ -270,10 +312,17 @@ class LoadingScreen {
                 setTimeout(() => {
                     loader.remove();
                 }, 500);
-            }, 1000);
+            }, 800); // Slightly faster for better UX
         });
     }
 }
+
+// Add global function to reset session (useful for testing or logout)
+window.resetLoaderSession = function() {
+    sessionStorage.removeItem('siteVisited');
+    sessionStorage.removeItem('visitTime');
+    console.log('Loader session reset - preloader will show on next page load');
+};
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -300,7 +349,7 @@ function debounce(func, wait) {
     };
 }
 
-// Smooth reveal animations
+// Smooth reveal animations - Compatible with UltraSmoothScroll
 const revealElements = () => {
     const reveals = document.querySelectorAll('.reveal');
     
@@ -315,4 +364,6 @@ const revealElements = () => {
     });
 };
 
+// Listen to both scroll events
 window.addEventListener('scroll', debounce(revealElements, 10));
+window.addEventListener('smoothscroll', debounce(revealElements, 10));

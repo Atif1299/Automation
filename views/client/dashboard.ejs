@@ -1,12 +1,6 @@
 <div class="dashboard-content">
-    <!-- Tabbed Content -->
+    <!-- Tab Content Container -->
     <div class="tab-container">
-        <div class="tabs-nav">
-            <button class="tab-btn active" data-tab="credentials"><span>Platform Setup</span></button>
-            <button class="tab-btn" data-tab="upload"><span>File Management</span></button>
-            <button class="tab-btn" data-tab="note"><span>Configuration</span></button>
-            <button class="tab-btn" data-tab="activity"><span>Activity Monitor</span></button>
-        </div>
 
     <div class="tab-content active" id="credentials">
         <div class="form-group">
@@ -99,35 +93,88 @@
             </div>
         </div>
         <div class="activity-window" id="activity-window">
-            <div class="log-entry success">
-                <div class="log-header">
-                    <span class="log-time">2025-08-30 10:30:15</span>
-                    <span class="log-type success">SUCCESS</span>
-                </div>
-                <div class="log-message">Connected to LinkedIn successfully</div>
-                <div class="log-details" style="display: none;">
-                    <pre>Authentication successful for user: john.doe@email.com
-Response time: 1.2s
-Session ID: abc123def456</pre>
+            <div class="loading-logs">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading activity logs...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Messages Tab -->
+    <div class="tab-content" id="messages">
+        <div class="messages-tab-container">
+            <div class="messages-header-tab">
+                <h2>Admin Messages</h2>
+                <div class="messages-info">
+                    <span class="online-status">Admin is online</span>
                 </div>
             </div>
-            <div class="log-entry info">
-                <div class="log-header">
-                    <span class="log-time">2025-08-30 10:31:22</span>
-                    <span class="log-type info">INFO</span>
+
+            <div class="messages-content-tab">
+                <div class="conversation-area-tab">
+                    <div class="messages-list-tab" id="messages-list-tab">
+                        <!-- Messages will be loaded here -->
+                        <% if (typeof client !== 'undefined' && client && client.activityLogs) { %>
+                            <% client.activityLogs.forEach(log => { %>
+                                <% if (log.type === 'admin_message') { %>
+                                    <div class="message admin-message">
+                                        <div class="message-avatar">
+                                            <div class="avatar admin-avatar">A</div>
+                                        </div>
+                                        <div class="message-content">
+                                            <div class="message-header">
+                                                <span class="message-sender">Admin</span>
+                                                <span class="message-time"><%= new Date(log.timestamp).toLocaleString() %></span>
+                                            </div>
+                                            <div class="message-text">
+                                                <%= log.details %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } else if (log.type === 'client_message') { %>
+                                    <div class="message client-message">
+                                        <div class="message-content">
+                                            <div class="message-header">
+                                                <span class="message-sender">You</span>
+                                                <span class="message-time"><%= new Date(log.timestamp).toLocaleString() %></span>
+                                            </div>
+                                            <div class="message-text">
+                                                <%= log.details %>
+                                            </div>
+                                        </div>
+                                        <div class="message-avatar">
+                                            <div class="avatar client-avatar">C</div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="no-messages-tab">
+                                <div class="no-messages-icon">💬</div>
+                                <h3>No messages yet</h3>
+                                <p>Start a conversation with the admin team</p>
+                            </div>
+                        <% } %>
+                    </div>
                 </div>
-                <div class="log-message">Processing CSV file: contacts.csv (245 rows)</div>
-            </div>
-            <div class="log-entry error">
-                <div class="log-header">
-                    <span class="log-time">2025-08-30 10:32:01</span>
-                    <span class="log-type error">ERROR</span>
-                </div>
-                <div class="log-message">Failed to process contact: invalid email format</div>
-                <div class="log-details" style="display: none;">
-                    <pre>Row 15: "john.doe@invalid"
-Error: Invalid email format
-Suggestion: Check email validation rules</pre>
+
+                <div class="message-input-area-tab">
+                    <form class="message-form-tab" id="message-form-tab">
+                        <div class="input-group-tab">
+                            <textarea 
+                                id="message-input-tab" 
+                                placeholder="Type your message to admin..." 
+                                rows="3" 
+                                required
+                            ></textarea>
+                            <button type="submit" class="send-button-tab" id="send-message-tab">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Send
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

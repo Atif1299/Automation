@@ -9,7 +9,7 @@
     <h1>Automation and Enrichment </h1>
     <p>Streamline your LinkedIn & Email outreach and enrich your contact lists with our powerful ai automations</p>
     
-    <a href="/client/1" class="cta-button morph-button ripple">
+    <a href="/auth/client-login" class="cta-button morph-button ripple">
         Get Started
         <span>→</span>
     </a>
@@ -212,113 +212,12 @@
             </div>
             <div class="agent-status active">Active</div>
         </div>
-        
-        <div class="agent-card premium" data-agent="analytics">
-            <div class="agent-header">
-                <div class="agent-avatar">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
-                    </svg>
-                </div>
-                <div class="capability-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M9 11H7v6h2v-6zm4-4h-2v10h2V7zm4-3h-2v13h2V4z"/>
-                    </svg>
-                </div>
-            </div>
-            <h3>Analytics & Optimization Agent</h3>
-            <p>Monitors campaign performance and optimizes outreach strategies for maximum ROI</p>
-            <div class="agent-features">
-                <span class="feature-tag">Performance Tracking</span>
-                <span class="feature-tag">AI Optimization</span>
-            </div>
-            <div class="agent-status learning">Learning</div>
-        </div>
     </div>
     </div>
 </div>
 
-<!-- Working Terminal Animation -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const terminalOutput = document.getElementById('terminalOutput');
-    
-    if (!terminalOutput) {
-        console.error('Terminal output not found');
-        return;
-    }
-    
-    const messages = [
-        { user: 'User$', text: 'I need to scrape 500 LinkedIn profiles from tech companies', color: '#00ff00' },
-        { user: 'AI-Agent$', text: 'Processing LinkedIn scraping request... ✓', color: '#ff6b35' },
-        { user: 'User$', text: 'Can you enrich these contacts with email addresses?', color: '#00ff00' },
-        { user: 'AI-Agent$', text: 'Initiating contact enrichment with 95% accuracy... ✓', color: '#ff6b35' },
-        { user: 'User$', text: 'Set up automated follow-up emails for my prospects', color: '#00ff00' },
-        { user: 'AI-Agent$', text: 'Email campaign sequence configured successfully ✓', color: '#ff6b35' }
-    ];
-    
-    let currentMessageIndex = 0;
-    
-    function typeMessage(message, callback) {
-        const line = document.createElement('div');
-        line.style.marginBottom = '10px';
-        line.style.fontFamily = 'Monaco, "Courier New", monospace';
-        
-        const prompt = document.createElement('span');
-        prompt.textContent = message.user + ' ';
-        prompt.style.color = message.color;
-        prompt.style.fontWeight = 'bold';
-        
-        const textSpan = document.createElement('span');
-        textSpan.style.color = '#ffffff';
-        
-        const cursor = document.createElement('span');
-        cursor.textContent = '_';
-        cursor.style.color = message.color;
-        cursor.style.animation = 'blink 1s infinite';
-        
-        line.appendChild(prompt);
-        line.appendChild(textSpan);
-        line.appendChild(cursor);
-        terminalOutput.appendChild(line);
-        
-        let charIndex = 0;
-        const text = message.text;
-        
-        function typeChar() {
-            if (charIndex < text.length) {
-                textSpan.textContent += text.charAt(charIndex);
-                charIndex++;
-                setTimeout(typeChar, 50 + Math.random() * 50);
-            } else {
-                cursor.remove();
-                setTimeout(callback, 1500);
-            }
-        }
-        
-        typeChar();
-    }
-    
-    function typeNextMessage() {
-        if (currentMessageIndex >= messages.length) {
-            setTimeout(() => {
-                terminalOutput.innerHTML = '';
-                currentMessageIndex = 0;
-                typeNextMessage();
-            }, 3000);
-            return;
-        }
-        
-        typeMessage(messages[currentMessageIndex], () => {
-            currentMessageIndex++;
-            typeNextMessage();
-        });
-    }
-    
-    // Start typing animation
-    setTimeout(typeNextMessage, 1000);
-});
-</script>
+<!-- Include Landing Page JavaScript -->
+<script src="/js/landing-page.js"></script>
 
 
 

@@ -1,0 +1,577 @@
+/* ==========================================================================
+   AUTH PAGES SHARED STYLES
+   Professional CSS for all authentication pages matching main site theme
+   ========================================================================== */
+
+/* Prevent layout shift during page load */
+html, body {
+    overflow-x: hidden;
+}
+
+body {
+    min-height: 100vh;
+}
+
+/* Preload styling to prevent flash */
+.auth-main-content {
+    opacity: 0;
+    animation: fadeInAuth 0.6s ease-out 0.1s forwards;
+}
+
+@keyframes fadeInAuth {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* CSS Variables to match main site theme */
+:root {
+    --primary-color: #00d4ff;
+    --primary-light: #33e1ff;
+    --primary-dark: #0099cc;
+    --secondary-color: #ff6b6b;
+    --accent-color: #4ecdc4;
+    --success-color: #00f5a0;
+    --warning-color: #ffb347;
+    --error-color: #ff4757;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #e6edf3;
+    --text-light: #c9d1d9;
+    --text-muted: #8b949e;
+    
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-card: #1c2128;
+    
+    --border-light: #30363d;
+    --border-medium: #21262d;
+    
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3);
+    
+    --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #4ecdc4 100%);
+    --gradient-bg: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+    --gradient-card: linear-gradient(145deg, #1c2128 0%, #161b22 100%);
+    
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --border-radius-xl: 16px;
+    
+    --transition-normal: 0.3s ease;
+}
+
+/* Base Auth Layout */
+.auth-main-content {
+    height: 89.5vh; /* Full viewport height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-bg);
+    padding: 0; /* Remove padding to prevent overflow */
+    position: relative;
+    padding-top: 70px; /* Account for navigation bar height using padding instead of margin */
+    box-sizing: border-box; /* Include padding in height calculation */
+    overflow: hidden; /* Prevent any scrolling */
+}
+
+.auth-main-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(78, 205, 196, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.auth-card-container {
+    background: var(--gradient-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-xl);
+    width: min(900px, 90vw); /* Responsive width */
+    height: min(500px, 70vh); /* Responsive height */
+    display: flex;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl), var(--shadow-glow);
+    position: relative;
+    z-index: 1;
+}
+
+.auth-card-container.large {
+    width: min(950px, 80vw); /* Responsive width */
+    height: min(650px, 65vh); /* Better height for register page */
+}
+
+.auth-form-section {
+    flex: 1;
+    padding: 35px 45px; /* Optimized padding for better fit */
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: var(--text-primary);
+    border-right: 1px solid var(--border-light);
+    position: relative;
+    overflow-y: auto; /* Allow scrolling if needed */
+}
+
+.auth-form-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--primary-color), transparent);
+    opacity: 0.5;
+}
+
+.auth-form-section.compact {
+    padding: 25px 35px; /* More compact padding for register */
+    overflow-y: auto;
+    justify-content: flex-start; /* Start from top for better form layout */
+    padding-top: 20px; /* Reduced top padding */
+}
+
+.auth-welcome-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-primary);
+    text-align: center;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    background: var(--gradient-primary);
+}
+
+/* Theme Variations - All now use consistent primary gradient */
+.auth-welcome-section.client-theme {
+    background: var(--gradient-primary);
+}
+
+.auth-welcome-section.admin-theme {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+}
+
+.auth-welcome-section.register-theme {
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+}
+
+.auth-welcome-section::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.auth-welcome-section::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -10%;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
+}
+
+/* Typography */
+.auth-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-align: left;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+}
+
+/* Compact title for register page */
+.auth-form-section.compact .auth-title {
+    font-size: 2.2rem;
+    margin-bottom: 1.2rem;
+    margin-top: 0;
+}
+
+.welcome-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    z-index: 2;
+    position: relative;
+    line-height: 1.1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.95;
+    line-height: 1.6;
+    z-index: 2;
+    position: relative;
+    font-weight: 400;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 1.3rem; /* Optimized margin for better fit */
+    position: relative;
+}
+
+.form-group.compact {
+    margin-bottom: 1rem; /* Compact spacing for registration */
+}
+
+/* Compact input styling for register page */
+.form-group.compact input {
+    padding: 14px 45px 14px 14px; /* Slightly smaller padding */
+    font-size: 0.95rem;
+}
+
+.form-group input {
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-light);
+    border-radius: var(--border-radius-md);
+    padding: 16px 50px 16px 16px;
+    font-size: 1rem;
+    color: var(--text-primary);
+    outline: none;
+    transition: var(--transition-normal);
+    font-family: inherit;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    background: var(--bg-secondary);
+}
+
+.form-group input::placeholder {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* Chrome Autofill Styling Override */
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover,
+.form-group input:-webkit-autofill:focus,
+.form-group input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--bg-tertiary) inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    background-color: var(--bg-tertiary) !important;
+    border: 2px solid var(--border-light) !important;
+    border-radius: var(--border-radius-md) !important;
+    transition: var(--transition-normal) !important;
+}
+
+.form-group input:-webkit-autofill:focus {
+    border-color: var(--primary-color) !important;
+    -webkit-box-shadow: 0 0 0 30px var(--bg-secondary) inset, 0 0 0 3px rgba(0, 212, 255, 0.1) !important;
+}
+
+.form-group .input-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    transition: var(--transition-normal);
+    pointer-events: none;
+}
+
+.form-group input:focus + .input-icon {
+    color: var(--primary-color);
+}
+
+/* Buttons */
+.auth-button {
+    border: none;
+    padding: 14px 0; /* Slightly reduced padding */
+    border-radius: var(--border-radius-md);
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin: 1.5rem 0; /* Reduced margin */
+    transition: var(--transition-normal);
+    background: var(--gradient-primary);
+    position: relative;
+    overflow: hidden;
+    font-family: inherit;
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.auth-button:hover::before {
+    left: 100%;
+}
+
+.auth-button.client-theme {
+    background: var(--gradient-primary);
+}
+
+.auth-button.admin-theme {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+}
+
+.auth-button.register-theme {
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl), var(--shadow-glow);
+}
+
+.auth-button:active {
+    transform: translateY(0);
+}
+
+.auth-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: var(--shadow-lg);
+}
+
+/* Messages */
+.error-message {
+    background: linear-gradient(135deg, var(--error-color), #e53e3e);
+    color: var(--text-primary);
+    padding: 14px 20px;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 1.5rem;
+    display: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-left: 4px solid #ff1744;
+    box-shadow: var(--shadow-md);
+}
+
+.success-message {
+    background: linear-gradient(135deg, var(--success-color), #00e676);
+    color: var(--text-primary);
+    padding: 14px 20px;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 1.5rem;
+    display: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-left: 4px solid #00c853;
+    box-shadow: var(--shadow-md);
+}
+
+/* Links */
+.auth-links {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.auth-links p {
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.auth-links a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition-normal);
+}
+
+.auth-links a:hover {
+    color: var(--primary-light);
+    text-decoration: underline;
+}
+
+/* Loading Animation */
+.auth-button.loading {
+    position: relative;
+    color: transparent;
+}
+
+.auth-button.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid var(--text-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Enhanced Focus States */
+.form-group input:focus {
+    animation: focusGlow 0.3s ease-out;
+}
+
+@keyframes focusGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .auth-main-content {
+        padding-top: 70px; /* Use padding instead of margin on mobile */
+        height: 100vh; /* Full viewport height */
+        box-sizing: border-box;
+    }
+    
+    .auth-card-container {
+        flex-direction: column;
+        width: 95vw;
+        height: 85vh; /* Use viewport height */
+        max-width: 420px;
+        max-height: none; /* Remove height restriction */
+        margin: 0;
+    }
+    
+    .auth-card-container.large {
+        max-width: 420px;
+        height: 90vh; /* Better height for register on mobile */
+    }
+    
+    .auth-welcome-section {
+        order: -1;
+        padding: 20px 15px; /* Reduced padding */
+        min-height: 120px; /* Smaller welcome section */
+        flex: 0 0 auto; /* Don't grow */
+    }
+    
+    .welcome-title {
+        font-size: 1.8rem; /* Smaller title */
+        margin-bottom: 0.5rem;
+    }
+    
+    .welcome-subtitle {
+        font-size: 0.9rem; /* Smaller subtitle */
+        line-height: 1.4;
+    }
+    
+    .auth-form-section {
+        padding: 25px 20px; /* Reduced padding */
+        border-right: none;
+        border-top: 1px solid var(--border-light);
+        flex: 1; /* Take remaining space */
+    }
+    
+    .auth-form-section::before {
+        display: none;
+    }
+    
+    .auth-form-section.compact {
+        padding: 15px 20px; /* Better mobile spacing for register */
+        padding-top: 10px; /* Minimal top padding */
+    }
+    
+    .auth-title {
+        font-size: 1.8rem; /* Smaller title */
+        text-align: center;
+        margin-bottom: 1rem; /* Reduced margin */
+    }
+    
+    .form-group input {
+        padding: 12px 40px 12px 12px; /* Smaller inputs */
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .form-group {
+        margin-bottom: 1rem; /* Reduced spacing */
+    }
+    
+    .form-group.compact {
+        margin-bottom: 0.8rem; /* Very compact */
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-main-content {
+        padding-top: 65px; /* Use padding instead of margin on very small screens */
+        height: 100vh; /* Full viewport height */
+        box-sizing: border-box;
+    }
+    
+    .auth-card-container {
+        width: 95vw;
+        height: 90vh; /* Use most of viewport height */
+        margin: 0;
+        border-radius: var(--border-radius-lg);
+    }
+    
+    .auth-title {
+        font-size: 1.8rem;
+    }
+    
+    .welcome-title {
+        font-size: 2rem;
+    }
+    
+    .form-group input {
+        padding: 12px 35px 12px 12px;
+    }
+    
+    .form-group .input-icon {
+        right: 12px;
+        font-size: 1.1rem;
+    }
+}
