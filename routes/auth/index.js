@@ -235,6 +235,14 @@ router.post('/admin/login',
                 permissions: ['read', 'write', 'delete', 'manage_clients']
             });
 
+            // Set secure HTTP-only cookie for web authentication
+            res.cookie('adminToken', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 8 * 60 * 60 * 1000 // 8 hours
+            });
+
             res.json({
                 success: true,
                 message: 'Admin login successful',

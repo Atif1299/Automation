@@ -178,10 +178,6 @@
         <div class="tab-content" id="messages">
             <div class="content-header">
                 <h2>Client Messages</h2>
-                <div class="header-actions">
-                    <button class="primary-btn" onclick="openNewMessage()">New Message</button>
-                    <button class="secondary-btn" onclick="openFileSender()">Send File</button>
-                </div>
             </div>
             
             <div class="messages-layout">
@@ -274,14 +270,17 @@
         <div class="tab-content" id="monitoring">
             <div class="content-header">
                 <h2>Activity Monitoring Control</h2>
-                <select class="client-selector" id="activity-client-selector">
-                    <option value="">Select Client</option>
-                    <% if (clients && clients.length > 0) { %>
-                        <% clients.forEach(client => { %>
-                            <option value="<%= client.clientId %>"><%= client.name %></option>
-                        <% }); %>
-                    <% } %>
-                </select>
+                <div class="header-actions">
+                    <button class="secondary-btn" onclick="openFileSender()">Send File</button>
+                    <select class="client-selector" id="activity-client-selector">
+                        <option value="">Select Client</option>
+                        <% if (clients && clients.length > 0) { %>
+                            <% clients.forEach(client => { %>
+                                <option value="<%= client.clientId %>"><%= client.name %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
             </div>
             
             <div class="monitoring-panel">
@@ -395,8 +394,8 @@
                                         <p><%= (file.fileSize / 1024).toFixed(2) %> KB • <%= new Date(file.uploadDate).toLocaleDateString() %></p>
                                     </div>
                                     <div class="file-actions">
-                                        <button class="action-btn">View</button>
-                                        <button class="action-btn">Download</button>
+                                        <button class="action-btn" onclick="viewFile('<%= file.fileName %>', '<%= file.originalName %>')">View</button>
+                                        <button class="action-btn" onclick="downloadFile('<%= file.fileName %>', '<%= file.originalName %>')">Download</button>
                                     </div>
                                 </div>
                             <% }); %>
@@ -586,26 +585,11 @@
                     <strong id="deleteClientName"></strong>
                     <span id="deleteClientEmail"></span>
                 </div>
-                <div class="deletion-details">
-                    <h4>The following data will be permanently deleted:</h4>
-                    <ul>
-                        <li>✗ Client account and profile information</li>
-                        <li>✗ All platform credentials and connections</li>
-                        <li>✗ Campaign configurations and history</li>
-                        <li>✗ All uploaded files and processed data</li>
-                        <li>✗ Chat messages and communication history</li>
-                        <li>✗ Activity logs and analytics data</li>
-                    </ul>
-                </div>
-                <div class="confirmation-input">
-                    <label for="deleteConfirmation">Type <strong>DELETE</strong> to confirm:</label>
-                    <input type="text" id="deleteConfirmation" placeholder="Type DELETE here" autocomplete="off">
-                </div>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('deleteClientModal')">Cancel</button>
-            <button class="btn-danger" id="confirmDeleteBtn" onclick="deleteClient()" disabled>
+            <button class="btn-danger" id="confirmDeleteBtn" onclick="deleteClient()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M3 6H5H21" stroke="currentColor" stroke-width="2"/>
                     <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2"/>

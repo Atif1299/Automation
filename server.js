@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
+const cookieParser = require('cookie-parser');
 const app = express();
 const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
@@ -58,6 +59,9 @@ app.use('/uploads/admin-files', express.static(path.join(__dirname, 'uploads/adm
 // Middleware to parse URL-encoded bodies and JSON
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
+
+// Cookie parser middleware
+app.use(cookieParser());
 
 // Security middleware
 app.use(sanitizeInput);

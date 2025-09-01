@@ -869,22 +869,10 @@ function confirmDeleteClient(clientId, clientName) {
     document.getElementById('deleteClientName').textContent = clientName;
     document.getElementById('deleteClientEmail').textContent = getClientEmail(clientId);
     
-    // Reset confirmation input
-    const confirmInput = document.getElementById('deleteConfirmation');
-    confirmInput.value = '';
-    
-    // Disable delete button
-    document.getElementById('confirmDeleteBtn').disabled = true;
-    
     // Show modal
     const modal = document.getElementById('deleteClientModal');
     if (modal) {
         modal.style.display = 'flex';
-        
-        // Focus on confirmation input
-        setTimeout(() => {
-            confirmInput.focus();
-        }, 100);
     }
 }
 
@@ -897,25 +885,6 @@ function getClientEmail(clientId) {
     }
     return '';
 }
-
-// Handle confirmation input
-document.addEventListener('DOMContentLoaded', function() {
-    const confirmInput = document.getElementById('deleteConfirmation');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    
-    if (confirmInput && confirmBtn) {
-        confirmInput.addEventListener('input', function() {
-            const isValid = this.value.trim().toUpperCase() === 'DELETE';
-            confirmBtn.disabled = !isValid;
-            
-            if (isValid) {
-                confirmBtn.classList.add('confirmed');
-            } else {
-                confirmBtn.classList.remove('confirmed');
-            }
-        });
-    }
-});
 
 async function deleteClient() {
     if (!clientToDelete) {
@@ -1131,3 +1100,43 @@ window.AdminDashboard = {
     loadClientMessages,
     updateChatMessages
 };
+
+// File download functionality
+function downloadFile(fileName, originalName) {
+    try {
+        // Create download link
+        const downloadUrl = `/admin/download-file/${encodeURIComponent(fileName)}`;
+        
+        // Create temporary link element
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = originalName || fileName;
+        link.style.display = 'none';
+        
+        // Add to DOM, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('File download initiated:', originalName);
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        showNotification('Error downloading file', 'error');
+    }
+}
+
+// File view functionality
+function viewFile(fileName, originalName) {
+    try {
+        const viewUrl = `/admin/view-file/${encodeURIComponent(fileName)}`;
+        window.open(viewUrl, '_blank');
+        console.log('File view opened:', originalName);
+    } catch (error) {
+        console.error('Error viewing file:', error);
+        showNotification('Error viewing file', 'error');
+    }
+}
+
+// Make functions globally available
+window.downloadFile = downloadFile;
+window.viewFile = viewFile;

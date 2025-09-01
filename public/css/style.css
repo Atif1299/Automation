@@ -48,7 +48,7 @@
     --transition-normal: 0.3s ease;
     --transition-slow: 0.5s ease;
     
-    --section-padding: 100px 0;
+    --section-padding: 60px 0;
     --container-padding: 0 24px;
 }
 
@@ -239,12 +239,17 @@ nav .nav-links a:active {
 /* Hero Section with Dark Theme and Advanced Animations */
 .hero {
     text-align: center;
-    padding: 140px 0 120px;
+    padding: 150px 0 120px; /* Increased top padding to account for navigation */
     background: var(--bg-primary);
     background-image: var(--gradient-bg);
     position: relative;
     overflow: hidden;
     height: 90vh;
+    /* display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; */
+    /* min-height: 90vh; Ensure full viewport height */
 }
 
 .hero::before {
@@ -724,10 +729,10 @@ nav .nav-links a:active {
     .workflow-section h2 {
         font-size: 2rem;
     }
-}
     
     .hero {
-        padding: 100px 0 80px;
+        padding: 140px 0 80px; /* Adjusted for mobile navigation */
+        min-height: 90vh;
     }
     
     .hero h1 {
@@ -747,6 +752,7 @@ nav .nav-links a:active {
         padding: 16px 28px;
         font-size: 16px;
     }
+}
     
     .features {
         grid-template-columns: 1fr;
@@ -814,6 +820,11 @@ nav .nav-links a:active {
 
 
 @media (max-width: 480px) {
+    .hero {
+        padding: 120px 0 60px; /* More compact for small screens */
+        min-height: 85vh;
+    }
+    
     .hero h1 {
         font-size: 32px;
         color: var(--text-primary);
@@ -1425,8 +1436,10 @@ body {
 /* Floating Community Section - Professional Geometric Shapes */
 .floating-community-section {
     position: relative;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #0d1117 100%);
+    min-height: 80vh;
+    background: var(--bg-primary);
+
+    /* background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #0d1117 100%); */
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -1703,4 +1716,243 @@ body {
 .ripple:active::before {
     width: 300px;
     height: 300px;
+}
+
+/* ==========================================================================
+   FOOTER STYLES
+   Beautiful dark footer with social media icons and navigation
+   ========================================================================== */
+
+.site-footer {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1c2128 100%);
+    border-top: 1px solid var(--border-light);
+    padding: 60px 0 30px;
+    margin-top: 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.site-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gradient-primary);
+    opacity: 0.7;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+}
+
+/* Social Media Icons */
+.footer-social {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.social-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-light);
+    border-radius: 50%;
+    color: var(--text-light);
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.social-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+    border-radius: 50%;
+}
+
+.social-icon svg {
+    width: 24px;
+    height: 24px;
+    position: relative;
+    z-index: 2;
+    transition: transform var(--transition-normal);
+}
+
+.social-icon:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-lg), 0 0 25px rgba(0, 212, 255, 0.4);
+}
+
+.social-icon:hover::before {
+    opacity: 1;
+}
+
+.social-icon:hover svg {
+    transform: scale(1.1);
+    color: white;
+}
+
+/* Specific social media colors on hover */
+.social-icon:nth-child(1):hover { /* Facebook */
+    border-color: #1877f2;
+    box-shadow: var(--shadow-lg), 0 0 25px rgba(24, 119, 242, 0.4);
+}
+
+.social-icon:nth-child(1):hover::before {
+    background: linear-gradient(135deg, #1877f2 0%, #42a5f5 100%);
+}
+
+.social-icon:nth-child(2):hover { /* Instagram */
+    border-color: #e4405f;
+    box-shadow: var(--shadow-lg), 0 0 25px rgba(228, 64, 95, 0.4);
+}
+
+.social-icon:nth-child(2):hover::before {
+    background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+}
+
+.social-icon:nth-child(3):hover { /* Twitter */
+    border-color: #1da1f2;
+    box-shadow: var(--shadow-lg), 0 0 25px rgba(29, 161, 242, 0.4);
+}
+
+.social-icon:nth-child(3):hover::before {
+    background: linear-gradient(135deg, #1da1f2 0%, #0d8bd9 100%);
+}
+
+.social-icon:nth-child(4):hover { /* Google */
+    border-color: #db4437;
+    box-shadow: var(--shadow-lg), 0 0 25px rgba(219, 68, 55, 0.4);
+}
+
+.social-icon:nth-child(4):hover::before {
+    background: linear-gradient(135deg, #db4437 0%, #0f9d58 50%, #f4b400 100%);
+}
+
+.social-icon:nth-child(5):hover { /* YouTube */
+    border-color: #ff0000;
+    box-shadow: var(--shadow-lg), 0 0 25px rgba(255, 0, 0, 0.4);
+}
+
+.social-icon:nth-child(5):hover::before {
+    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+}
+
+/* Copyright Section */
+.footer-copyright {
+    text-align: center;
+    padding-top: 30px;
+    border-top: 1px solid var(--border-light);
+    width: 100%;
+}
+
+.footer-copyright p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 400;
+}
+
+.designer-name {
+    color: var(--primary-color);
+    font-weight: 600;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .site-footer {
+        padding: 40px 0 20px;
+        margin-top: 60px;
+    }
+    
+    .footer-content {
+        gap: 30px;
+        padding: 0 15px;
+    }
+    
+    .footer-social {
+        gap: 15px;
+    }
+    
+    .social-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .social-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .footer-nav {
+        gap: 25px;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .footer-link {
+        font-size: 1rem;
+        padding: 6px 12px;
+    }
+    
+    .footer-copyright {
+        padding-top: 25px;
+    }
+    
+    .footer-copyright p {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-content {
+        gap: 25px;
+    }
+    
+    .footer-social {
+        gap: 12px;
+    }
+    
+    .social-icon {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .social-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .footer-nav {
+        gap: 20px;
+    }
+    
+    .footer-link {
+        font-size: 0.95rem;
+    }
 }

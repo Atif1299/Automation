@@ -1005,13 +1005,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function handleLogout(event) {
     event.preventDefault();
     
-    // Clear any stored authentication data
+    // Clear any stored authentication data immediately
     localStorage.removeItem('authToken');
     sessionStorage.clear();
     
-    // Show confirmation
-    if (confirm('Are you sure you want to logout?')) {
-        // Redirect to landing page
-        window.location.href = '/';
-    }
+    // Clear any client-specific data
+    localStorage.removeItem('clientId');
+    localStorage.removeItem('clientData');
+    
+    // Redirect to landing page immediately (no confirmation)
+    window.location.href = '/';
 }

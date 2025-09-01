@@ -32,10 +32,10 @@ body {
 /* CSS Variables to match main site theme */
 :root {
     --primary-color: #00d4ff;
-    --primary-light: #33e1ff;
+    --primary-light: #317b89;
     --primary-dark: #0099cc;
     --secondary-color: #ff6b6b;
-    --accent-color: #4ecdc4;
+    --accent-color: #3f9dab;
     --success-color: #00f5a0;
     --warning-color: #ffb347;
     --error-color: #ff4757;
@@ -77,7 +77,7 @@ body {
     background: var(--gradient-bg);
     padding: 0; /* Remove padding to prevent overflow */
     position: relative;
-    padding-top: 70px; /* Account for navigation bar height using padding instead of margin */
+    padding-top: 40px; /* Account for navigation bar height using padding instead of margin */
     box-sizing: border-box; /* Include padding in height calculation */
     overflow: hidden; /* Prevent any scrolling */
 }
