@@ -672,23 +672,44 @@ function openNewMessage() {
 }
 
 // Activity Monitoring Functions
-function updateClientMonitor() {
+async function updateClientMonitor() {
     const form = document.querySelector('.activity-form');
     if (form) {
-        const formData = new FormData(form);
-        const clientId = currentSelectedClientId;
-        
+        const clientId = document.getElementById('activity-client-selector').value;
+        const status = form.querySelector('select').value;
+        const progress = form.querySelector('input[type="range"]').value;
+        const message = form.querySelector('textarea').value;
+
         if (!clientId) {
-            alert('Please select a client first');
+            showNotification('Please select a client', 'error');
             return;
         }
-        
-        // This would typically send data to API
-        console.log('Updating client monitor for client:', clientId);
-        console.log('Form data:', Object.fromEntries(formData));
-        
-        // Show success message
-        showNotification('Client monitor updated successfully!', 'success');
+
+        if (!message) {
+            showNotification('Please enter a status message', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/activity-update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ clientId, status, progress, message }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showNotification('Client activity updated successfully!', 'success');
+            } else {
+                throw new Error(result.message || 'Failed to update activity');
+            }
+        } catch (error) {
+            console.error('Error updating client activity:', error);
+            showNotification(`Error: ${error.message}`, 'error');
+        }
     }
 }
 
@@ -824,14 +845,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize client selector change
-    const clientSelector = document.querySelector('.client-selector');
-    if (clientSelector) {
-        clientSelector.addEventListener('change', (e) => {
-            const clientId = e.target.value;
-            if (clientId) {
-                loadClientData(clientId);
-            }
+    // Initialize client search and filtering
+    const searchInput = document.querySelector('.search-input');
+    const filterSelect = document.querySelector('.filter-select');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            searchAndFilterClients();
+        });
+    }
+
+    if (filterSelect) {
+        filterSelect.addEventListener('change', () => {
+            searchAndFilterClients();
         });
     }
     
@@ -1141,6 +1167,80 @@ function viewFile(fileId, originalName) {
     } catch (error) {
         console.error('Error viewing file:', error);
         showNotification('Error viewing file', 'error');
+    }
+}
+
+// Function to search and filter clients
+async function searchAndFilterClients() {
+    const search = document.querySelector('.search-input').value;
+    const status = document.querySelector('.filter-select').value;
+    
+    try {
+        const response = await fetch(`/admin/clients?search=${encodeURIComponent(search)}&status=${status}`);
+        const data = await response.json();
+
+        if (data.success) {
+            updateClientsGrid(data.clients);
+        } else {
+            console.error('Failed to fetch clients:', data.message);
+        }
+    } catch (error) {
+        console.error('Error fetching clients:', error);
+    }
+}
+
+// Function to update the clients grid with new data
+function updateClientsGrid(clients) {
+    const clientsGrid = document.querySelector('.clients-grid');
+    clientsGrid.innerHTML = ''; // Clear existing clients
+
+    if (clients.length > 0) {
+        clients.forEach(client => {
+            const clientCard = document.createElement('div');
+            clientCard.className = 'client-card';
+            clientCard.innerHTML = `
+                <div class="client-header">
+                    <div class="client-avatar">
+                        ${client.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+                    </div>
+                    <div class="client-info">
+                        <h3>${client.name}</h3>
+                        <span class="client-email">${client.email}</span>
+                        <span class="client-status ${client.status}">${client.status.charAt(0).toUpperCase() + client.status.slice(1)}</span>
+                    </div>
+                    <div class="client-actions">
+                        <button class="action-btn view-btn" onclick="viewClientDetails('${client.clientId}')">View</button>
+                        <button class="action-btn message-btn" onclick="openClientChat('${client.clientId}')">Message</button>
+                        <button class="action-btn delete-btn" onclick="confirmDeleteClient('${client.clientId}', '${client.name}')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+                <div class="client-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Platforms</span>
+                        <span class="stat-value">${client.credentials?.length || 0}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Files</span>
+                        <span class="stat-value">${client.uploadedFiles?.length || 0}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Last Active</span>
+                        <span class="stat-value">${client.lastLogin ? new Date(client.lastLogin).toLocaleDateString() : 'Never'}</span>
+                    </div>
+                </div>
+            `;
+            clientsGrid.appendChild(clientCard);
+        });
+    } else {
+        clientsGrid.innerHTML = '<div class="no-clients"><p>No clients found.</p></div>';
     }
 }
 

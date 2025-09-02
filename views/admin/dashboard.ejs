@@ -109,10 +109,10 @@
                 <div class="search-filter">
                     <input type="text" placeholder="Search clients..." class="search-input">
                     <select class="filter-select">
-                        <option>All Clients</option>
-                        <option>Active</option>
-                        <option>Inactive</option>
-                        <option>New</option>
+                        <option value="all">All Clients</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="pending_verification">New</option>
                     </select>
                 </div>
             </div>
@@ -272,14 +272,6 @@
                 <h2>Activity Monitoring Control</h2>
                 <div class="header-actions">
                     <button class="secondary-btn" onclick="openFileSender()">Send File</button>
-                    <select class="client-selector" id="activity-client-selector">
-                        <option value="">Select Client</option>
-                        <% if (clients && clients.length > 0) { %>
-                            <% clients.forEach(client => { %>
-                                <option value="<%= client.clientId %>"><%= client.name %></option>
-                            <% }); %>
-                        <% } %>
-                    </select>
                 </div>
             </div>
             
@@ -287,6 +279,17 @@
                 <div class="activity-controls">
                     <h3>Update Client Activity Monitor</h3>
                     <form class="activity-form">
+                        <div class="form-group">
+                            <label>Select Client</label>
+                            <select class="form-control" id="activity-client-selector">
+                                <option value="">Select Client</option>
+                                <% if (clients && clients.length > 0) { %>
+                                    <% clients.forEach(client => { %>
+                                        <option value="<%= client.clientId %>"><%= client.name %></option>
+                                    <% }); %>
+                                <% } %>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label>Activity Status</label>
                             <select class="form-control">

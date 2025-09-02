@@ -79,8 +79,15 @@ router.post('/:id/credentials', async (req, res) => {
             connectionStatus: 'pending'
         });
         
+        client.activityLogs.push({
+            type: 'success',
+            message: `Platform credentials saved: ${platform}`,
+            details: `Username: ${username}`,
+            source: 'client',
+            timestamp: new Date()
+        });
+
         await client.save();
-        await client.addActivityLog('success', `Credentials saved for ${platform} - ${username}`);
         
         console.log(`✅ Credentials saved for client ${clientId}: ${platform}`);
         
@@ -126,8 +133,20 @@ router.post('/:id/upload', clientUpload.single('file'), async (req, res) => {
             isActive: true,
         });
 
+        client.activityLogs.push({
+            type: 'info',
+            message: `File uploaded: ${file.originalname}`,
+            details: `File Size: ${(file.size / 1024).toFixed(2)} KB`,
+            source: 'client',
+            timestamp: new Date(),
+            fileInfo: {
+                fileName: file.filename,
+                originalName: file.originalname,
+                category: 'data'
+            }
+        });
+
         await client.save();
-        await client.addActivityLog('info', `File uploaded: ${file.originalname}`);
 
         console.log(`✅ File uploaded for client ${clientId}: ${file.originalname}`);
 
@@ -163,8 +182,15 @@ router.post('/:id/config', async (req, res) => {
             status: 'draft'
         });
         
+        client.activityLogs.push({
+            type: 'info',
+            message: `Campaign configuration saved: ${campaignName}`,
+            details: `Type: ${automationType}`,
+            source: 'client',
+            timestamp: new Date()
+        });
+
         await client.save();
-        await client.addActivityLog('info', 'Configuration saved');
         
         console.log(`✅ Configuration saved for client ${clientId}: ${campaignName}`);
         
