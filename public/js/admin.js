@@ -1108,16 +1108,16 @@ window.AdminDashboard = {
     updateChatMessages
 };
 
-// File download functionality
-function downloadFile(fileName, originalName) {
+// File download functionality - PRODUCTION READY VERSION
+function downloadFile(fileId, originalName) {
     try {
-        // Create download link
-        const downloadUrl = `/admin/download-file/${encodeURIComponent(fileName)}`;
+        // Use file ID instead of filename for reliable downloads
+        const downloadUrl = `/admin/download-file/${encodeURIComponent(fileId)}`;
         
         // Create temporary link element
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.download = originalName || fileName;
+        link.download = originalName || 'download';
         link.style.display = 'none';
         
         // Add to DOM, click, and remove
@@ -1133,9 +1133,9 @@ function downloadFile(fileName, originalName) {
 }
 
 // File view functionality
-function viewFile(fileName, originalName) {
+function viewFile(fileId, originalName) {
     try {
-        const viewUrl = `/admin/view-file/${encodeURIComponent(fileName)}`;
+        const viewUrl = `/admin/view-file/${encodeURIComponent(fileId)}`;
         window.open(viewUrl, '_blank');
         console.log('File view opened:', originalName);
     } catch (error) {

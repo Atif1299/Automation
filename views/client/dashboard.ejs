@@ -116,7 +116,7 @@
                         <!-- Messages will be loaded here -->
                         <% if (typeof client !== 'undefined' && client && client.activityLogs) { %>
                             <% client.activityLogs.forEach(log => { %>
-                                <% if (log.type === 'admin_message') { %>
+                                <% if (log.source === 'admin') { %>
                                     <div class="message admin-message">
                                         <div class="message-avatar">
                                             <div class="avatar admin-avatar">A</div>
@@ -127,11 +127,11 @@
                                                 <span class="message-time"><%= new Date(log.timestamp).toLocaleString() %></span>
                                             </div>
                                             <div class="message-text">
-                                                <%= log.details %>
+                                                <%= log.message %>
                                             </div>
                                         </div>
                                     </div>
-                                <% } else if (log.type === 'client_message') { %>
+                                <% } else if (log.source === 'client') { %>
                                     <div class="message client-message">
                                         <div class="message-content">
                                             <div class="message-header">
@@ -139,7 +139,7 @@
                                                 <span class="message-time"><%= new Date(log.timestamp).toLocaleString() %></span>
                                             </div>
                                             <div class="message-text">
-                                                <%= log.details %>
+                                                <%= log.message %>
                                             </div>
                                         </div>
                                         <div class="message-avatar">

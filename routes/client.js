@@ -1,6 +1,28 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const Client = require('../models/Client');
+
+// Configure multer for client file uploads
+const clientStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const clientId = req.params.id;
+        const uploadDir = path.join(__dirname, '../uploads', clientId);
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const timestamp = Date.now();
+        const originalName = file.originalname.replace(/[^a-zA-Z0-9\._-]/g, '');
+        cb(null, `${timestamp}-${originalName}`);
+    }
+});
+
+const clientUpload = multer({ storage: clientStorage });
 
 // Client dashboard route
 router.get('/:id', async (req, res) => {
@@ -74,36 +96,50 @@ router.post('/:id/credentials', async (req, res) => {
 });
 
 // Upload file route
-router.post('/:id/upload', async (req, res) => {
+router.post('/:id/upload', clientUpload.single('file'), async (req, res) => {
     try {
         const clientId = req.params.id;
-        const { fileName, fileSize, fileType } = req.body;
-        
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ error: 'File is required' });
+        }
+
         const client = await Client.findByClientId(clientId);
         if (!client) {
+            fs.unlinkSync(file.path); // Clean up uploaded file
             return res.status(404).json({ error: 'Client not found' });
         }
-        
-        // Add file upload record
+
+        const relativePath = path.join(clientId, file.filename);
+
         client.uploadedFiles.push({
-            fileName: fileName || `file_${Date.now()}`,
-            originalName: fileName || 'uploaded_file.csv',
-            fileSize: fileSize || 0,
-            fileType: fileType || 'text/csv',
-            status: 'uploaded'
+            fileName: file.filename,
+            originalName: file.originalname,
+            fileSize: file.size,
+            fileType: file.mimetype,
+            uploadDate: new Date(),
+            status: 'uploaded',
+            category: 'data',
+            relativePath: relativePath,
+            diskPath: file.path,
+            isActive: true,
         });
-        
+
         await client.save();
-        await client.addActivityLog('info', 'File uploaded and validated');
-        
-        console.log(`✅ File uploaded for client ${clientId}: ${fileName}`);
-        
-        res.json({ 
-            success: true, 
-            message: 'File uploaded successfully' 
+        await client.addActivityLog('info', `File uploaded: ${file.originalname}`);
+
+        console.log(`✅ File uploaded for client ${clientId}: ${file.originalname}`);
+
+        res.json({
+            success: true,
+            message: 'File uploaded successfully'
         });
     } catch (error) {
         console.error('❌ Error uploading file:', error);
+        if (req.file) {
+            fs.unlinkSync(req.file.path); // Clean up uploaded file on error
+        }
         res.status(500).json({ error: 'Failed to upload file' });
     }
 });
@@ -248,11 +284,11 @@ router.post('/:id/send-message', async (req, res) => {
         
         // Add client message to activity logs
         const clientMessage = {
-            activity: 'Client Message',
-            details: message.trim(),
-            status: 'info',
+            type: 'info',
+            message: message.trim(),
+            details: 'Message from Client Dashboard',
             timestamp: new Date(),
-            type: 'client_message'
+            source: 'client'
         };
         
         client.activityLogs.push(clientMessage);

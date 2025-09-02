@@ -501,22 +501,22 @@ router.delete('/clients/:clientId', async (req, res) => {
 });
 
 // Enhanced download file route with analytics and cloud-ready structure
-router.get('/download-file/:fileName', async (req, res) => {
+router.get('/download-file/:fileId', async (req, res) => {
     try {
-        const fileName = req.params.fileName;
+        const fileId = req.params.fileId;
         
-        console.log('🔍 Download request for fileName:', fileName);
+        console.log('🔍 Download request for fileId:', fileId);
         
         // Try to find file in database first for metadata
         let fileRecord = null;
         if (Client) {
             try {
                 const clientWithFile = await Client.findOne({
-                    'uploadedFiles.fileName': fileName
+                    'uploadedFiles._id': fileId
                 });
                 
                 if (clientWithFile) {
-                    fileRecord = clientWithFile.uploadedFiles.find(f => f.fileName === fileName);
+                    fileRecord = clientWithFile.uploadedFiles.find(f => f._id.toString() === fileId);
                     console.log('� Found file record in database:', fileRecord ? 'Yes' : 'No');
                 }
             } catch (dbError) {
@@ -524,70 +524,45 @@ router.get('/download-file/:fileName', async (req, res) => {
             }
         }
         
-        // Determine file path (check both old and new structure)
+        // Use database paths (RELIABLE METHOD)
         let filePath;
-        let found = false;
         
-        // First try: Use database path if available
-        if (fileRecord && fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
+        console.log('🔍 File record details:');
+        console.log('  - diskPath:', fileRecord.diskPath);
+        console.log('  - relativePath:', fileRecord.relativePath);
+        console.log('  - fileName:', fileRecord.fileName);
+        console.log('  - originalName:', fileRecord.originalName);
+        
+        if (fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
             filePath = fileRecord.diskPath;
-            found = true;
-            console.log('✅ Found file using database path');
-        } else if (fileRecord && fileRecord.relativePath) {
-            // Try relative path
+            console.log('✅ Using database diskPath');
+        } else if (fileRecord.relativePath) {
             filePath = path.join(__dirname, '../uploads', fileRecord.relativePath);
+            console.log('🔍 Checking relativePath:', filePath);
             if (fs.existsSync(filePath)) {
-                found = true;
-                console.log('✅ Found file using relative path');
-            }
-        }
-        
-        // Fallback: Search in organized directories
-        if (!found) {
-            const currentYear = new Date().getFullYear();
-            const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-            
-            // Try current month/year
-            filePath = path.join(__dirname, '../uploads/admin-files', `${currentYear}`, `${currentMonth}`, fileName);
-            if (fs.existsSync(filePath)) {
-                found = true;
-                console.log('✅ Found file in current organized structure');
+                console.log('✅ Using database relativePath');
             } else {
-                // Try old flat structure
-                filePath = path.join(__dirname, '../uploads/admin-files', fileName);
-                if (fs.existsSync(filePath)) {
-                    found = true;
-                    console.log('✅ Found file in old flat structure');
-                } else {
-                    // Search all year/month directories
-                    const adminFilesDir = path.join(__dirname, '../uploads/admin-files');
-                    const searchResult = await searchFileInDirectories(adminFilesDir, fileName);
-                    if (searchResult) {
-                        filePath = searchResult;
-                        found = true;
-                        console.log('✅ Found file through directory search');
-                    }
-                }
+                console.log('❌ File missing from expected location');
+                console.log('  - Tried diskPath:', fileRecord.diskPath);
+                console.log('  - Tried relativePath:', filePath);
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'File missing from storage',
+                    expectedPath: filePath
+                });
             }
-        }
-        
-        console.log('🔍 Final filePath:', filePath);
-        console.log('🔍 File exists check:', found);
-        
-        if (!found) {
-            console.log('❌ File not found anywhere');
-            
-            // List files for debugging
-            const uploadDir = path.join(__dirname, '../uploads/admin-files');
-            if (fs.existsSync(uploadDir)) {
-                const files = await listAllFiles(uploadDir);
-                console.log('📁 All files in upload structure:', files.slice(0, 10)); // Show first 10
-            }
-            
-            return res.status(404).json({ 
+        } else {
+            console.log('❌ No valid path in database record');
+            console.log('🔍 File record details:', {
+                fileName: fileRecord.fileName,
+                originalName: fileRecord.originalName,
+                diskPath: fileRecord.diskPath,
+                relativePath: fileRecord.relativePath,
+                fileSize: fileRecord.fileSize
+            });
+            return res.status(500).json({ 
                 success: false, 
-                message: 'File not found',
-                searchedPaths: [filePath]
+                message: 'Invalid file record - no path information' 
             });
         }
         
@@ -599,7 +574,7 @@ router.get('/download-file/:fileName', async (req, res) => {
         if (fileRecord && Client) {
             try {
                 await Client.updateOne(
-                    { 'uploadedFiles.fileName': fileName },
+                    { 'uploadedFiles._id': fileRecord._id },
                     { 
                         $inc: { 'uploadedFiles.$.downloadCount': 1 },
                         $set: { 'uploadedFiles.$.lastAccessed': new Date() }
@@ -644,79 +619,59 @@ router.get('/download-file/:fileName', async (req, res) => {
     }
 });
 
-// Helper function to search for files in organized directories
-async function searchFileInDirectories(baseDir, fileName) {
-    try {
-        const items = fs.readdirSync(baseDir);
-        
-        for (const item of items) {
-            const itemPath = path.join(baseDir, item);
-            const stat = fs.statSync(itemPath);
-            
-            if (stat.isDirectory()) {
-                // Recursively search subdirectories
-                const result = await searchFileInDirectories(itemPath, fileName);
-                if (result) return result;
-            } else if (item === fileName) {
-                return itemPath;
-            }
-        }
-        
-        return null;
-    } catch (error) {
-        console.error('Error searching directories:', error);
-        return null;
-    }
-}
-
-// Helper function to list all files in directory structure
-async function listAllFiles(baseDir) {
-    const files = [];
-    
-    try {
-        const items = fs.readdirSync(baseDir);
-        
-        for (const item of items) {
-            const itemPath = path.join(baseDir, item);
-            const stat = fs.statSync(itemPath);
-            
-            if (stat.isDirectory()) {
-                const subFiles = await listAllFiles(itemPath);
-                files.push(...subFiles);
-            } else {
-                files.push(item);
-            }
-        }
-    } catch (error) {
-        console.error('Error listing files:', error);
-    }
-    
-    return files;
-}
-
 // View file route
-router.get('/view-file/:fileName', (req, res) => {
+router.get('/view-file/:fileId', async (req, res) => {
     try {
-        const fileName = req.params.fileName;
-        const filePath = path.join(__dirname, '../uploads/admin-files', fileName);
+        const fileId = req.params.fileId;
         
-        // Check if file exists
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'File not found' 
+        // Find file by database ID
+        let client;
+        let fileRecord;
+        
+        try {
+            client = await Client.findOne({
+                'uploadedFiles._id': fileId
+            });
+            
+            if (client) {
+                fileRecord = client.uploadedFiles.find(f => f._id.toString() === fileId);
+            }
+        } catch (dbError) {
+            console.error('❌ Database lookup failed:', dbError);
+            return res.status(500).json({
+                success: false,
+                message: 'Database error'
             });
         }
         
-        // Get file extension to set proper content type
-        const ext = path.extname(fileName).toLowerCase();
-        let contentType = 'application/octet-stream';
+        if (!fileRecord) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'File not found in database' 
+            });
+        }
         
-        if (ext === '.pdf') contentType = 'application/pdf';
-        else if (['.jpg', '.jpeg'].includes(ext)) contentType = 'image/jpeg';
-        else if (ext === '.png') contentType = 'image/png';
-        else if (ext === '.txt') contentType = 'text/plain';
-        else if (ext === '.csv') contentType = 'text/csv';
+        // Get file path
+        let filePath;
+        if (fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
+            filePath = fileRecord.diskPath;
+        } else if (fileRecord.relativePath) {
+            filePath = path.join(__dirname, '../uploads', fileRecord.relativePath);
+            if (!fs.existsSync(filePath)) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'File missing from storage' 
+                });
+            }
+        } else {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Invalid file record' 
+            });
+        }
+        
+        // Set content type
+        const contentType = fileRecord.mimeType || 'application/octet-stream';
         
         // Set headers for viewing
         res.setHeader('Content-Type', contentType);
@@ -726,7 +681,7 @@ router.get('/view-file/:fileName', (req, res) => {
         const fileStream = fs.createReadStream(filePath);
         fileStream.pipe(res);
         
-        console.log('👁️ File view initiated:', fileName);
+        console.log('👁️ File view initiated:', fileRecord.originalName);
         
     } catch (error) {
         console.error('❌ Error viewing file:', error);
