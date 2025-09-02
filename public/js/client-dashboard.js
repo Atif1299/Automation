@@ -281,21 +281,25 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadActivityLogs() {
         const clientId = window.location.pathname.split('/').pop();
         
-        fetch(`/client/${clientId}/logs`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.logs) {
-                    displayActivityLogs(data.logs);
-                } else {
-                    console.error('Failed to load activity logs:', data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading activity logs:', error);
-            });
+        // Fetch both logs and client data to get uploadedFiles
+        Promise.all([
+            fetch(`/client/${clientId}/logs`).then(res => res.json()),
+            fetch(`/admin/clients/${clientId}`).then(res => res.json())
+        ])
+        .then(([logsData, clientData]) => {
+            if (logsData.success && clientData.success) {
+                // Pass both logs and the client's files to the display function
+                displayActivityLogs(logsData.logs, clientData.client.uploadedFiles);
+            } else {
+                console.error('Failed to load activity logs or client data:', { logsData, clientData });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading activity logs and client data:', error);
+        });
     }
     
-    function displayActivityLogs(logs) {
+    function displayActivityLogs(logs, uploadedFiles) {
         const activityWindow = document.getElementById('activity-window');
         if (!activityWindow) return;
 
@@ -341,17 +345,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             }
             
-            // Add file download link if it's an admin file
-            if (log.fileInfo && log.fileInfo.downloadPath) {
-                logHTML += `
+            // Add file download link
+            if (log.fileInfo) {
+                let fileId = log.fileInfo.fileId;
+                // Fallback for older logs: find the file by name
+                if (!fileId && uploadedFiles) {
+                    const fileRecord = uploadedFiles.find(f => f.originalName === log.fileInfo.originalName || f.fileName === log.fileInfo.fileName);
+                    if (fileRecord) {
+                        fileId = fileRecord._id;
+                    }
+                }
+
+                if (fileId) {
+                    const downloadUrl = `/admin/download-file/${fileId}`;
+                    logHTML += `
                     <div class="log-file-info">
                         <i class="fas fa-file-download"></i>
-                        <a href="${log.fileInfo.downloadPath}" download="${log.fileInfo.originalName}" class="file-download-link">
+                        <a href="${downloadUrl}" download="${log.fileInfo.originalName}" class="file-download-link">
                             Download: ${log.fileInfo.originalName}
                         </a>
-                        <span class="file-category">(${log.fileInfo.category})</span>
+                        <span class="file-category">(${log.fileInfo.category || 'file'})</span>
                     </div>
-                `;
+                    `;
+                }
             }
             
             logEntry.innerHTML = logHTML;

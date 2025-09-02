@@ -120,7 +120,7 @@ router.post('/:id/upload', clientUpload.single('file'), async (req, res) => {
 
         const relativePath = path.join(clientId, file.filename);
 
-        client.uploadedFiles.push({
+        const newFile = client.uploadedFiles.create({
             fileName: file.filename,
             originalName: file.originalname,
             fileSize: file.size,
@@ -132,6 +132,7 @@ router.post('/:id/upload', clientUpload.single('file'), async (req, res) => {
             diskPath: file.path,
             isActive: true,
         });
+        client.uploadedFiles.push(newFile);
 
         client.activityLogs.push({
             type: 'info',
@@ -140,6 +141,7 @@ router.post('/:id/upload', clientUpload.single('file'), async (req, res) => {
             source: 'client',
             timestamp: new Date(),
             fileInfo: {
+                fileId: newFile._id, // Add the fileId to the log
                 fileName: file.filename,
                 originalName: file.originalname,
                 category: 'data'
