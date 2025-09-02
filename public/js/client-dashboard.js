@@ -512,17 +512,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get client ID from URL
             const clientId = window.location.pathname.split('/')[2];
             
-            // Send file info to server
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Send file to server
             const response = await fetch(`/client/${clientId}/upload`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    fileName: file.name,
-                    fileSize: file.size,
-                    fileType: file.type
-                })
+                body: formData
             });
             
             const result = await response.json();
