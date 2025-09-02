@@ -5,38 +5,11 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const axios = require('axios');
+const { uploadFileToGCS, getSignedUrl, deleteFileFromGCS } = require('../config/gcs');
 
-// Configure multer for admin file uploads with enhanced organization
-const adminStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        // Create organized directory structure
-        const year = new Date().getFullYear();
-        const month = String(new Date().getMonth() + 1).padStart(2, '0');
-        const uploadDir = path.join(__dirname, '../uploads/admin-files', `${year}`, `${month}`);
-        
-        // Ensure directory exists
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        // Generate unique filename with better structure
-        const timestamp = Date.now();
-        const randomId = Math.round(Math.random() * 1E9);
-        const fileExt = path.extname(file.originalname);
-        const baseName = path.basename(file.originalname, fileExt);
-        
-        // Clean filename for better compatibility
-        const cleanBaseName = baseName.replace(/[^a-zA-Z0-9\-_\s]/g, '').substring(0, 50);
-        const finalName = `admin-${timestamp}-${randomId}-${cleanBaseName}${fileExt}`;
-        
-        cb(null, finalName);
-    }
-});
-
-const adminUpload = multer({ 
-    storage: adminStorage,
+// Configure multer to use memory storage, as files will be streamed to GCS
+const adminUpload = multer({
+    storage: multer.memoryStorage(),
     limits: {
         fileSize: 10 * 1024 * 1024 // 10MB limit
     },
@@ -185,73 +158,39 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
     try {
         const { clientId, message, category } = req.body;
         const file = req.file;
-        
-        if (!clientId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Client ID is required' 
-            });
-        }
-        
-        if (!file) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'File is required' 
-            });
+
+        if (!clientId || !file) {
+            return res.status(400).json({ success: false, message: 'Client ID and file are required' });
         }
 
-        // Check if database is connected
-        if (mongoose.connection.readyState !== 1 || !Client) {
-            return res.status(503).json({ 
-                success: false, 
-                message: 'Database not available' 
-            });
-        }
-
-        // Find the client
-        const client = await Client.findOne({ clientId }).maxTimeMS(5000);
-        
+        const client = await Client.findOne({ clientId });
         if (!client) {
-            // Delete uploaded file if client not found
-            fs.unlinkSync(file.path);
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Client not found' 
-            });
+            return res.status(404).json({ success: false, message: 'Client not found' });
         }
 
-        // Create enhanced file record for client
-        const year = new Date().getFullYear();
-        const month = String(new Date().getMonth() + 1).padStart(2, '0');
-        const relativePath = `admin-files/${year}/${month}/${file.filename}`;
-        
-        const fileRecord = {
-            fileName: file.filename, // Actual disk filename
-            originalName: file.originalname, // Original uploaded name
+        // Create a unique filename for GCS
+        const gcsFileName = `admin-uploads/${Date.now()}-${file.originalname}`;
+
+        // Upload the file to GCS
+        const gcsUrl = await uploadFileToGCS(file.buffer, gcsFileName);
+
+        const newFile = client.uploadedFiles.create({
+            fileName: gcsFileName,
+            originalName: file.originalname,
             fileSize: file.size,
             fileType: file.mimetype,
             uploadDate: new Date(),
             status: 'admin_sent',
             category: category || 'other',
             adminMessage: message || '',
-            downloadPath: `/uploads/${relativePath}`,
-            relativePath: relativePath, // For cloud migration
-            diskPath: path.join(__dirname, '../uploads', relativePath),
-            fileHash: null, // For future integrity checking
+            cloudProvider: 'google-cloud',
+            cloudPath: gcsFileName,
+            cloudUrl: gcsUrl,
             isActive: true,
-            downloadCount: 0,
-            lastAccessed: null
-        };
-
-        // Add file to client's uploaded files and get the new sub-document
-        const newFile = client.uploadedFiles.create(fileRecord);
+        });
         client.uploadedFiles.push(newFile);
 
-        // Add activity log entry
-        const activityMessage = message ? 
-            `Admin sent file: ${file.originalname} - ${message}` : 
-            `Admin sent file: ${file.originalname}`;
-            
+        const activityMessage = message ? `Admin sent file: ${file.originalname} - ${message}` : `Admin sent file: ${file.originalname}`;
         client.activityLogs.push({
             type: 'info',
             message: activityMessage,
@@ -259,45 +198,29 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
             timestamp: new Date(),
             source: 'admin',
             fileInfo: {
-                fileId: newFile._id, // Add the fileId to the log
-                fileName: file.filename,
+                fileId: newFile._id,
+                fileName: gcsFileName,
                 originalName: file.originalname,
                 category: category || 'other',
-                downloadPath: `/uploads/admin-files/${file.filename}`
             }
         });
 
         await client.save();
 
-        console.log(`✅ File sent to client ${clientId}:`, {
-            originalName: file.originalname,
-            size: file.size,
-            category: category,
-            message: message
-        });
+        console.log(`✅ File sent to GCS for client ${clientId}: ${file.originalname}`);
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: `File "${file.originalname}" sent successfully to ${client.name}`,
-            fileInfo: {
-                originalName: file.originalname,
-                size: file.size,
-                category: category
-            }
         });
 
     } catch (error) {
-        console.error('❌ Error sending file to client:', error);
-        
-        // Clean up uploaded file on error
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-        
+        console.error('❌ Detailed GCS Upload Error (Admin):', error.message);
+        console.error(error.stack);
         res.status(500).json({ 
             success: false, 
             message: 'Internal server error while sending file',
-            error: error.message 
+            details: error.message
         });
     }
 });
@@ -549,76 +472,69 @@ router.get('/download-file/:fileId', async (req, res) => {
 
         const clientWithFile = await Client.findOne({ 'uploadedFiles._id': fileId });
         if (!clientWithFile) {
-            return res.status(404).json({ success: false, message: 'File record not found in any client.' });
+            return res.status(404).json({ success: false, message: 'File record not found.' });
         }
         const fileRecord = clientWithFile.uploadedFiles.id(fileId);
 
-        let filePath = null;
+        if (fileRecord.cloudProvider === 'google-cloud' && fileRecord.fileName) {
+            // Generate a signed URL for secure, temporary access
+            const signedUrl = await getSignedUrl(fileRecord.fileName);
 
-        // Use the paths stored in the database
-        if (fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
-            filePath = fileRecord.diskPath;
-            console.log(`✅ Found file using diskPath: ${filePath}`);
-        } else if (fileRecord.relativePath && fs.existsSync(path.join(__dirname, '../uploads', fileRecord.relativePath))) {
-            filePath = path.join(__dirname, '../uploads', fileRecord.relativePath);
-            console.log(`✅ Found file using relativePath: ${filePath}`);
-        }
+            // Update download analytics
+            fileRecord.downloadCount += 1;
+            fileRecord.lastAccessed = new Date();
+            await clientWithFile.save();
 
-        if (!filePath) {
-            console.error(`❌ Critical: Could not find file ${fileRecord.fileName} on disk.`);
-            return res.status(404).json({ success: false, message: 'File not found on server storage.' });
-        }
-        
-        // Get file stats
-        const stats = fs.statSync(filePath);
-        const originalName = fileRecord ? fileRecord.originalName : fileName.replace(/^admin-\d+-\d+-/, '');
-        
-        // Update download analytics if database is available
-        if (fileRecord && Client) {
-            try {
-                await Client.updateOne(
-                    { 'uploadedFiles._id': fileRecord._id },
-                    { 
-                        $inc: { 'uploadedFiles.$.downloadCount': 1 },
-                        $set: { 'uploadedFiles.$.lastAccessed': new Date() }
-                    }
-                );
-                console.log('📊 Updated download analytics');
-            } catch (dbError) {
-                console.warn('⚠️ Failed to update analytics:', dbError.message);
+            // Fetch the file from GCS and stream it to the client to trigger a direct download
+            const response = await axios({
+                method: 'get',
+                url: signedUrl,
+                responseType: 'stream'
+            });
+
+            res.setHeader('Content-Disposition', `attachment; filename="${fileRecord.originalName}"`);
+            res.setHeader('Content-Type', fileRecord.fileType);
+            response.data.pipe(res);
+        } else {
+            // Fallback for any files that might still be stored locally
+            console.warn(`⚠️ File ${fileId} is not on GCS. Attempting local fallback.`);
+            const localPath = fileRecord.diskPath || path.join(__dirname, '../uploads', fileRecord.relativePath);
+            if (fs.existsSync(localPath)) {
+                res.download(localPath, fileRecord.originalName);
+            } else {
+                return res.status(404).json({ success: false, message: 'File not found on server.' });
             }
         }
-        
-        // Set enhanced headers for download
-        res.setHeader('Content-Disposition', `attachment; filename="${originalName}"`);
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Length', stats.size);
-        res.setHeader('Cache-Control', 'private, no-cache');
-        
-        // Stream the file efficiently
-        const fileStream = fs.createReadStream(filePath);
-        
-        fileStream.on('error', (streamError) => {
-            console.error('❌ Stream error:', streamError);
-            if (!res.headersSent) {
-                res.status(500).json({ 
-                    success: false, 
-                    message: 'Error streaming file' 
-                });
-            }
-        });
-        
-        fileStream.pipe(res);
-        
-        console.log('📥 File download initiated:', originalName, `(${(stats.size / 1024).toFixed(2)} KB)`);
-        
     } catch (error) {
         console.error('❌ Error downloading file:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error downloading file',
-            error: error.message 
-        });
+        res.status(500).json({ success: false, message: 'Error downloading file' });
+    }
+});
+
+// Delete file route
+router.delete('/delete-file/:fileId', async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        const clientWithFile = await Client.findOne({ 'uploadedFiles._id': fileId });
+
+        if (!clientWithFile) {
+            return res.status(404).json({ success: false, message: 'File record not found.' });
+        }
+        const fileRecord = clientWithFile.uploadedFiles.id(fileId);
+
+        // Delete from GCS
+        if (fileRecord.cloudProvider === 'google-cloud' && fileRecord.fileName) {
+            await deleteFileFromGCS(fileRecord.fileName);
+        }
+
+        // Remove from database
+        fileRecord.remove();
+        await clientWithFile.save();
+
+        res.json({ success: true, message: 'File deleted successfully.' });
+    } catch (error) {
+        console.error('❌ Error deleting file:', error);
+        res.status(500).json({ success: false, message: 'Error deleting file' });
     }
 });
 
@@ -626,73 +542,30 @@ router.get('/download-file/:fileId', async (req, res) => {
 router.get('/view-file/:fileId', async (req, res) => {
     try {
         const fileId = req.params.fileId;
-        
-        // Find file by database ID
-        let client;
-        let fileRecord;
-        
-        try {
-            client = await Client.findOne({
-                'uploadedFiles._id': fileId
-            });
-            
-            if (client) {
-                fileRecord = client.uploadedFiles.find(f => f._id.toString() === fileId);
-            }
-        } catch (dbError) {
-            console.error('❌ Database lookup failed:', dbError);
-            return res.status(500).json({
-                success: false,
-                message: 'Database error'
-            });
+        const clientWithFile = await Client.findOne({ 'uploadedFiles._id': fileId });
+
+        if (!clientWithFile) {
+            return res.status(404).json({ success: false, message: 'File record not found.' });
         }
-        
-        if (!fileRecord) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'File not found in database' 
-            });
-        }
-        
-        // Get file path
-        let filePath;
-        if (fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
-            filePath = fileRecord.diskPath;
-        } else if (fileRecord.relativePath) {
-            filePath = path.join(__dirname, '../uploads', fileRecord.relativePath);
-            if (!fs.existsSync(filePath)) {
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'File missing from storage' 
-                });
-            }
+        const fileRecord = clientWithFile.uploadedFiles.id(fileId);
+
+        if (fileRecord.cloudProvider === 'google-cloud' && fileRecord.fileName) {
+            // Generate a signed URL for secure, temporary access
+            const signedUrl = await getSignedUrl(fileRecord.fileName);
+            // Redirect the user to the signed URL to view the file
+            res.redirect(signedUrl);
         } else {
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Invalid file record' 
-            });
+            // Fallback for local files
+            const localPath = fileRecord.diskPath || path.join(__dirname, '../uploads', fileRecord.relativePath);
+            if (fs.existsSync(localPath)) {
+                res.sendFile(localPath);
+            } else {
+                return res.status(404).json({ success: false, message: 'File not found on server.' });
+            }
         }
-        
-        // Set content type
-        const contentType = fileRecord.mimeType || 'application/octet-stream';
-        
-        // Set headers for viewing
-        res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', 'inline');
-        
-        // Stream the file
-        const fileStream = fs.createReadStream(filePath);
-        fileStream.pipe(res);
-        
-        console.log('👁️ File view initiated:', fileRecord.originalName);
-        
     } catch (error) {
         console.error('❌ Error viewing file:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error viewing file',
-            error: error.message 
-        });
+        res.status(500).json({ success: false, message: 'Error viewing file' });
     }
 });
 
