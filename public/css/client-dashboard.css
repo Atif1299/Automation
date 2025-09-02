@@ -1664,3 +1664,77 @@ body.dashboard-body {
     width: 16px;
     height: 16px;
 }
+
+/* Campaign Performance Styles */
+.performance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.performance-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1e293b;
+}
+
+#campaign-filter {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    font-size: 0.9rem;
+}
+
+.performance-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.performance-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.performance-card h3 {
+    margin: 0 0 1.5rem;
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
+.performance-card .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+}
+
+.performance-card .stat {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.performance-card .stat .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.performance-card .stat .label {
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.performance-card .last-updated {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-align: right;
+}

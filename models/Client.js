@@ -62,7 +62,7 @@ const clientSchema = new mongoose.Schema({
         automationType: {
             type: String,
             required: true,
-            enum: ['enrichment', 'outreach', 'scraping']
+            enum: ['enrichment', 'email_outreach', 'scraping', 'linkedin_automation']
         },
         instructions: {
             type: String,
@@ -79,6 +79,17 @@ const clientSchema = new mongoose.Schema({
         },
         lastRun: {
             type: Date
+        },
+        phantomBusterAgentId: {
+            type: String,
+            trim: true
+        },
+        performanceData: {
+            collectedProfiles: Number,
+            sentInvites: Number,
+            acceptedRequests: Number,
+            timeSaved: Number, // In milliseconds
+            lastUpdated: Date
         }
     }],
     
@@ -240,6 +251,7 @@ const clientSchema = new mongoose.Schema({
     lastLogin: {
         type: Date
     },
+    
     emailVerified: {
         type: Boolean,
         default: false

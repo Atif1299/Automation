@@ -86,6 +86,21 @@
                 </svg>
                 File Management
             </button>
+            <button class="tab-btn" data-tab="performance">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 20V10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M18 20V4" stroke="currentColor" stroke-width="2"/>
+                    <path d="M6 20V16" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Campaign Performance
+            </button>
+            <button class="tab-btn" data-tab="api-settings">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 15V12M12 12V9M12 12H9M12 12H15" stroke="currentColor" stroke-width="2"/>
+                    <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                API Settings
+            </button>
         </div>
         
         <div class="admin-nav-right">
@@ -411,6 +426,51 @@
                 <% } %>
             </div>
         </div>
+
+        <!-- Campaign Performance Tab -->
+        <div class="tab-content" id="performance">
+            <div class="content-header">
+                <h2>Update Campaign Performance</h2>
+            </div>
+            <div class="performance-form">
+                <div class="form-group">
+                    <label>Select Client</label>
+                    <select class="form-control" id="performance-client-selector">
+                        <option value="">Select a client...</option>
+                        <% if (clients && clients.length > 0) { %>
+                            <% clients.forEach(client => { %>
+                                <option value="<%= client.clientId %>"><%= client.name %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Select Campaign</label>
+                    <select class="form-control" id="performance-campaign-selector" disabled>
+                        <option value="">Select a campaign...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>PhantomBuster Agent ID</label>
+                    <input type="text" id="phantombuster-agent-id" class="form-control" placeholder="Enter the PhantomBuster Agent ID...">
+                </div>
+                <button class="primary-btn" onclick="fetchAndUpdatePerformance()">Fetch & Update Performance</button>
+            </div>
+        </div>
+
+        <!-- API Settings Tab -->
+        <div class="tab-content" id="api-settings">
+            <div class="content-header">
+                <h2>API Settings</h2>
+            </div>
+            <div class="api-settings-form">
+                <div class="form-group">
+                    <label for="phantombuster-api-key">PhantomBuster API Key</label>
+                    <input type="password" id="phantombuster-api-key" class="form-control">
+                </div>
+                <button class="primary-btn" onclick="saveApiKey()">Save API Key</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -609,3 +669,32 @@
 
 </body>
 </html>
+
+</final_file_content>
+
+IMPORTANT: For any future changes to this file, use the final_file_content shown above as your reference. This content reflects the current state of the file, including any auto-formatting (e.g., if you used single quotes but the formatter converted them to double quotes). Always base your SEARCH/REPLACE operations on this final version to ensure accuracy.
+
+<environment_details>
+# VSCode Visible Files
+views/admin/dashboard.ejs
+
+# VSCode Open Tabs
+routes/client.js
+models/Client.js
+routes/admin.js
+public/js/admin.js
+public/css/client-dashboard.css
+views/layouts/client-layout.ejs
+public/js/client-dashboard.js
+views/client/dashboard.ejs
+views/admin/dashboard.ejs
+
+# Current Time
+9/2/2025, 7:35:24 PM (Asia/Karachi, UTC+5:00)
+
+# Context Window Usage
+703,120 / 1,048.576K tokens used (67%)
+
+# Current Mode
+ACT MODE
+</environment_details>
