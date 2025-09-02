@@ -541,17 +541,6 @@ router.delete('/clients/:clientId', async (req, res) => {
     }
 });
 
-// Load the file index
-const fileIndexPath = path.join(__dirname, '../config/file-index.json');
-let fileIndex = {};
-try {
-    if (fs.existsSync(fileIndexPath)) {
-        fileIndex = JSON.parse(fs.readFileSync(fileIndexPath, 'utf-8'));
-    }
-} catch (error) {
-    console.error('Error loading file index:', error);
-}
-
 // Enhanced download file route with analytics and cloud-ready structure
 router.get('/download-file/:fileId', async (req, res) => {
     try {
@@ -565,24 +554,12 @@ router.get('/download-file/:fileId', async (req, res) => {
         const fileRecord = clientWithFile.uploadedFiles.id(fileId);
 
         let filePath = null;
-        const projectRoot = path.join(__dirname, '..');
 
-        // Method 1: Use the pre-built file index (fastest and most reliable)
-        if (fileIndex[fileRecord.fileName]) {
-            const relativePath = fileIndex[fileRecord.fileName];
-            const absolutePath = path.join(projectRoot, relativePath);
-            if (fs.existsSync(absolutePath)) {
-                filePath = absolutePath;
-                console.log(`✅ Found file using index: ${filePath}`);
-            }
-        }
-
-        // Method 2: Try database paths if index fails
-        if (!filePath && fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
+        // Use the paths stored in the database
+        if (fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
             filePath = fileRecord.diskPath;
             console.log(`✅ Found file using diskPath: ${filePath}`);
-        }
-        if (!filePath && fileRecord.relativePath && fs.existsSync(path.join(__dirname, '../uploads', fileRecord.relativePath))) {
+        } else if (fileRecord.relativePath && fs.existsSync(path.join(__dirname, '../uploads', fileRecord.relativePath))) {
             filePath = path.join(__dirname, '../uploads', fileRecord.relativePath);
             console.log(`✅ Found file using relativePath: ${filePath}`);
         }
