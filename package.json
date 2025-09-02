@@ -6,6 +6,10 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "init-db": "node scripts/initDatabase.js",
+    "migrate-files": "node scripts/migrateFileSystem.js",
+    "validate-files": "node scripts/validateFileSystem.js",
+    "cleanup-files": "node -e \"const app = require('./server.js'); setTimeout(() => { fetch('http://localhost:3000/admin/api/cleanup-files', { method: 'POST', headers: { 'Authorization': 'Bearer YOUR_ADMIN_TOKEN' } }).then(r => r.json()).then(console.log).finally(() => process.exit(0)); }, 2000);\"",
+    "file-stats": "node -e \"const app = require('./server.js'); setTimeout(() => { fetch('http://localhost:3000/admin/api/file-statistics').then(r => r.json()).then(console.log).finally(() => process.exit(0)); }, 2000);\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

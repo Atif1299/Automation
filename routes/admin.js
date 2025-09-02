@@ -5,18 +5,32 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 
-// Configure multer for admin file uploads
+// Configure multer for admin file uploads with enhanced organization
 const adminStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadDir = path.join(__dirname, '../uploads/admin-files');
+        // Create organized directory structure
+        const year = new Date().getFullYear();
+        const month = String(new Date().getMonth() + 1).padStart(2, '0');
+        const uploadDir = path.join(__dirname, '../uploads/admin-files', `${year}`, `${month}`);
+        
+        // Ensure directory exists
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'admin-' + uniqueSuffix + '-' + file.originalname);
+        // Generate unique filename with better structure
+        const timestamp = Date.now();
+        const randomId = Math.round(Math.random() * 1E9);
+        const fileExt = path.extname(file.originalname);
+        const baseName = path.basename(file.originalname, fileExt);
+        
+        // Clean filename for better compatibility
+        const cleanBaseName = baseName.replace(/[^a-zA-Z0-9\-_\s]/g, '').substring(0, 50);
+        const finalName = `admin-${timestamp}-${randomId}-${cleanBaseName}${fileExt}`;
+        
+        cb(null, finalName);
     }
 });
 
@@ -194,17 +208,27 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
             });
         }
 
-        // Create file record for client
+        // Create enhanced file record for client
+        const year = new Date().getFullYear();
+        const month = String(new Date().getMonth() + 1).padStart(2, '0');
+        const relativePath = `admin-files/${year}/${month}/${file.filename}`;
+        
         const fileRecord = {
-            fileName: file.filename,
-            originalName: file.originalname,
+            fileName: file.filename, // Actual disk filename
+            originalName: file.originalname, // Original uploaded name
             fileSize: file.size,
             fileType: file.mimetype,
             uploadDate: new Date(),
             status: 'admin_sent',
             category: category || 'other',
             adminMessage: message || '',
-            downloadPath: `/uploads/admin-files/${file.filename}`
+            downloadPath: `/uploads/${relativePath}`,
+            relativePath: relativePath, // For cloud migration
+            diskPath: path.join(__dirname, '../uploads', relativePath),
+            fileHash: null, // For future integrity checking
+            isActive: true,
+            downloadCount: 0,
+            lastAccessed: null
         };
 
         // Add file to client's uploaded files
@@ -476,32 +500,139 @@ router.delete('/clients/:clientId', async (req, res) => {
     }
 });
 
-// Download file route
-router.get('/download-file/:fileName', (req, res) => {
+// Enhanced download file route with analytics and cloud-ready structure
+router.get('/download-file/:fileName', async (req, res) => {
     try {
         const fileName = req.params.fileName;
-        const filePath = path.join(__dirname, '../uploads/admin-files', fileName);
         
-        // Check if file exists
-        if (!fs.existsSync(filePath)) {
+        console.log('🔍 Download request for fileName:', fileName);
+        
+        // Try to find file in database first for metadata
+        let fileRecord = null;
+        if (Client) {
+            try {
+                const clientWithFile = await Client.findOne({
+                    'uploadedFiles.fileName': fileName
+                });
+                
+                if (clientWithFile) {
+                    fileRecord = clientWithFile.uploadedFiles.find(f => f.fileName === fileName);
+                    console.log('� Found file record in database:', fileRecord ? 'Yes' : 'No');
+                }
+            } catch (dbError) {
+                console.warn('⚠️ Database lookup failed, proceeding with file system only');
+            }
+        }
+        
+        // Determine file path (check both old and new structure)
+        let filePath;
+        let found = false;
+        
+        // First try: Use database path if available
+        if (fileRecord && fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
+            filePath = fileRecord.diskPath;
+            found = true;
+            console.log('✅ Found file using database path');
+        } else if (fileRecord && fileRecord.relativePath) {
+            // Try relative path
+            filePath = path.join(__dirname, '../uploads', fileRecord.relativePath);
+            if (fs.existsSync(filePath)) {
+                found = true;
+                console.log('✅ Found file using relative path');
+            }
+        }
+        
+        // Fallback: Search in organized directories
+        if (!found) {
+            const currentYear = new Date().getFullYear();
+            const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+            
+            // Try current month/year
+            filePath = path.join(__dirname, '../uploads/admin-files', `${currentYear}`, `${currentMonth}`, fileName);
+            if (fs.existsSync(filePath)) {
+                found = true;
+                console.log('✅ Found file in current organized structure');
+            } else {
+                // Try old flat structure
+                filePath = path.join(__dirname, '../uploads/admin-files', fileName);
+                if (fs.existsSync(filePath)) {
+                    found = true;
+                    console.log('✅ Found file in old flat structure');
+                } else {
+                    // Search all year/month directories
+                    const adminFilesDir = path.join(__dirname, '../uploads/admin-files');
+                    const searchResult = await searchFileInDirectories(adminFilesDir, fileName);
+                    if (searchResult) {
+                        filePath = searchResult;
+                        found = true;
+                        console.log('✅ Found file through directory search');
+                    }
+                }
+            }
+        }
+        
+        console.log('🔍 Final filePath:', filePath);
+        console.log('🔍 File exists check:', found);
+        
+        if (!found) {
+            console.log('❌ File not found anywhere');
+            
+            // List files for debugging
+            const uploadDir = path.join(__dirname, '../uploads/admin-files');
+            if (fs.existsSync(uploadDir)) {
+                const files = await listAllFiles(uploadDir);
+                console.log('📁 All files in upload structure:', files.slice(0, 10)); // Show first 10
+            }
+            
             return res.status(404).json({ 
                 success: false, 
-                message: 'File not found' 
+                message: 'File not found',
+                searchedPaths: [filePath]
             });
         }
         
-        // Get original filename (remove admin prefix and timestamp)
-        const originalName = fileName.replace(/^admin-\d+-\d+-/, '');
+        // Get file stats
+        const stats = fs.statSync(filePath);
+        const originalName = fileRecord ? fileRecord.originalName : fileName.replace(/^admin-\d+-\d+-/, '');
         
-        // Set headers for download
+        // Update download analytics if database is available
+        if (fileRecord && Client) {
+            try {
+                await Client.updateOne(
+                    { 'uploadedFiles.fileName': fileName },
+                    { 
+                        $inc: { 'uploadedFiles.$.downloadCount': 1 },
+                        $set: { 'uploadedFiles.$.lastAccessed': new Date() }
+                    }
+                );
+                console.log('📊 Updated download analytics');
+            } catch (dbError) {
+                console.warn('⚠️ Failed to update analytics:', dbError.message);
+            }
+        }
+        
+        // Set enhanced headers for download
         res.setHeader('Content-Disposition', `attachment; filename="${originalName}"`);
         res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Length', stats.size);
+        res.setHeader('Cache-Control', 'private, no-cache');
         
-        // Stream the file
+        // Stream the file efficiently
         const fileStream = fs.createReadStream(filePath);
+        
+        fileStream.on('error', (streamError) => {
+            console.error('❌ Stream error:', streamError);
+            if (!res.headersSent) {
+                res.status(500).json({ 
+                    success: false, 
+                    message: 'Error streaming file' 
+                });
+            }
+        });
+        
         fileStream.pipe(res);
         
-        console.log('📥 File download initiated:', originalName);
+        console.log('📥 File download initiated:', originalName, `(${(stats.size / 1024).toFixed(2)} KB)`);
         
     } catch (error) {
         console.error('❌ Error downloading file:', error);
@@ -512,6 +643,56 @@ router.get('/download-file/:fileName', (req, res) => {
         });
     }
 });
+
+// Helper function to search for files in organized directories
+async function searchFileInDirectories(baseDir, fileName) {
+    try {
+        const items = fs.readdirSync(baseDir);
+        
+        for (const item of items) {
+            const itemPath = path.join(baseDir, item);
+            const stat = fs.statSync(itemPath);
+            
+            if (stat.isDirectory()) {
+                // Recursively search subdirectories
+                const result = await searchFileInDirectories(itemPath, fileName);
+                if (result) return result;
+            } else if (item === fileName) {
+                return itemPath;
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error searching directories:', error);
+        return null;
+    }
+}
+
+// Helper function to list all files in directory structure
+async function listAllFiles(baseDir) {
+    const files = [];
+    
+    try {
+        const items = fs.readdirSync(baseDir);
+        
+        for (const item of items) {
+            const itemPath = path.join(baseDir, item);
+            const stat = fs.statSync(itemPath);
+            
+            if (stat.isDirectory()) {
+                const subFiles = await listAllFiles(itemPath);
+                files.push(...subFiles);
+            } else {
+                files.push(item);
+            }
+        }
+    } catch (error) {
+        console.error('Error listing files:', error);
+    }
+    
+    return files;
+}
 
 // View file route
 router.get('/view-file/:fileName', (req, res) => {
@@ -553,6 +734,170 @@ router.get('/view-file/:fileName', (req, res) => {
             success: false, 
             message: 'Error viewing file',
             error: error.message 
+        });
+    }
+});
+
+// File maintenance and cleanup routes
+router.post('/cleanup-files', async (req, res) => {
+    try {
+        console.log('🧹 Starting file cleanup process...');
+        
+        const results = {
+            orphanedFiles: [],
+            missingFiles: [],
+            fixedRecords: 0,
+            errors: []
+        };
+        
+        if (!Client) {
+            return res.status(503).json({
+                success: false,
+                message: 'Database not available for cleanup'
+            });
+        }
+        
+        // Get all clients with files
+        const clients = await Client.find({ 'uploadedFiles.0': { $exists: true } });
+        
+        for (const client of clients) {
+            for (let i = 0; i < client.uploadedFiles.length; i++) {
+                const file = client.uploadedFiles[i];
+                
+                // Check if file exists on disk
+                let filePath = null;
+                let exists = false;
+                
+                // Try database path first
+                if (file.diskPath && fs.existsSync(file.diskPath)) {
+                    exists = true;
+                    filePath = file.diskPath;
+                } else if (file.relativePath) {
+                    filePath = path.join(__dirname, '../uploads', file.relativePath);
+                    exists = fs.existsSync(filePath);
+                } else {
+                    // Try to find file
+                    const searchResult = await searchFileInDirectories(
+                        path.join(__dirname, '../uploads/admin-files'), 
+                        file.fileName
+                    );
+                    if (searchResult) {
+                        exists = true;
+                        filePath = searchResult;
+                        
+                        // Update database record with correct path
+                        const relativePath = path.relative(path.join(__dirname, '../uploads'), searchResult);
+                        client.uploadedFiles[i].diskPath = searchResult;
+                        client.uploadedFiles[i].relativePath = relativePath;
+                        results.fixedRecords++;
+                    }
+                }
+                
+                if (!exists) {
+                    results.missingFiles.push({
+                        clientId: client.clientId,
+                        fileName: file.fileName,
+                        originalName: file.originalName
+                    });
+                    
+                    // Mark file as inactive instead of deleting
+                    client.uploadedFiles[i].isActive = false;
+                }
+            }
+            
+            // Save updated client record
+            if (results.fixedRecords > 0) {
+                await client.save();
+            }
+        }
+        
+        // Find orphaned files (files on disk but not in database)
+        const allDiskFiles = await listAllFiles(path.join(__dirname, '../uploads/admin-files'));
+        const allDbFiles = [];
+        
+        for (const client of clients) {
+            for (const file of client.uploadedFiles) {
+                allDbFiles.push(file.fileName);
+            }
+        }
+        
+        for (const diskFile of allDiskFiles) {
+            if (!allDbFiles.includes(diskFile)) {
+                results.orphanedFiles.push(diskFile);
+            }
+        }
+        
+        console.log('✅ File cleanup completed:', results);
+        
+        res.json({
+            success: true,
+            message: 'File cleanup completed',
+            results: results
+        });
+        
+    } catch (error) {
+        console.error('❌ Error during file cleanup:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error during file cleanup',
+            error: error.message
+        });
+    }
+});
+
+// Get file system statistics
+router.get('/file-stats', async (req, res) => {
+    try {
+        const stats = {
+            totalFiles: 0,
+            totalSize: 0,
+            filesByType: {},
+            uploadsByMonth: {},
+            storageLocations: {
+                local: 0,
+                cloud: 0
+            }
+        };
+        
+        if (Client) {
+            const clients = await Client.find({ 'uploadedFiles.0': { $exists: true } });
+            
+            for (const client of clients) {
+                for (const file of client.uploadedFiles) {
+                    if (file.isActive !== false) {
+                        stats.totalFiles++;
+                        stats.totalSize += file.fileSize || 0;
+                        
+                        // Count by file type
+                        const ext = path.extname(file.originalName).toLowerCase();
+                        stats.filesByType[ext] = (stats.filesByType[ext] || 0) + 1;
+                        
+                        // Count by upload month
+                        const month = new Date(file.uploadDate).toISOString().substring(0, 7);
+                        stats.uploadsByMonth[month] = (stats.uploadsByMonth[month] || 0) + 1;
+                        
+                        // Count storage locations
+                        if (file.cloudProvider === 'local') {
+                            stats.storageLocations.local++;
+                        } else {
+                            stats.storageLocations.cloud++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        res.json({
+            success: true,
+            stats: stats
+        });
+        
+    } catch (error) {
+        console.error('❌ Error getting file stats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting file statistics',
+            error: error.message
         });
     }
 });

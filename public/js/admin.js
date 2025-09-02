@@ -866,8 +866,15 @@ function confirmDeleteClient(clientId, clientName) {
     clientToDelete = { clientId, clientName };
     
     // Set client info in modal
-    document.getElementById('deleteClientName').textContent = clientName;
-    document.getElementById('deleteClientEmail').textContent = getClientEmail(clientId);
+    const deleteClientNameEl = document.getElementById('deleteClientName');
+    const deleteClientEmailEl = document.getElementById('deleteClientEmail');
+    
+    if (deleteClientNameEl) {
+        deleteClientNameEl.textContent = clientName;
+    }
+    if (deleteClientEmailEl) {
+        deleteClientEmailEl.textContent = getClientEmail(clientId);
+    }
     
     // Show modal
     const modal = document.getElementById('deleteClientModal');

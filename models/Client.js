@@ -82,7 +82,7 @@ const clientSchema = new mongoose.Schema({
         }
     }],
     
-    // File Uploads
+    // Enhanced File Uploads with Cloud-Ready Structure
     uploadedFiles: [{
         fileName: {
             type: String,
@@ -116,6 +116,49 @@ const clientSchema = new mongoose.Schema({
             type: String,
             enum: ['uploaded', 'processing', 'processed', 'failed', 'admin_sent'],
             default: 'uploaded'
+        },
+        // Enhanced metadata for production-ready system
+        relativePath: {
+            type: String,
+            required: false // Path relative to uploads directory
+        },
+        diskPath: {
+            type: String,
+            required: false // Full disk path (for local storage)
+        },
+        downloadPath: {
+            type: String,
+            required: false // Public download URL path
+        },
+        fileHash: {
+            type: String,
+            required: false // For integrity checking
+        },
+        isActive: {
+            type: Boolean,
+            default: true
+        },
+        downloadCount: {
+            type: Number,
+            default: 0
+        },
+        lastAccessed: {
+            type: Date,
+            required: false
+        },
+        // Cloud storage fields (for future migration)
+        cloudProvider: {
+            type: String,
+            enum: ['local', 'aws-s3', 'google-cloud', 'azure'],
+            default: 'local'
+        },
+        cloudPath: {
+            type: String,
+            required: false // Cloud storage path
+        },
+        cloudUrl: {
+            type: String,
+            required: false // Direct cloud URL
         },
         // New fields for admin-sent files
         category: {
