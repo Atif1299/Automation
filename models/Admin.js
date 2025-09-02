@@ -101,8 +101,6 @@ const adminSchema = new mongoose.Schema({
 });
 
 // Indexes
-adminSchema.index({ username: 1 });
-adminSchema.index({ email: 1 });
 adminSchema.index({ isActive: 1 });
 
 // Virtual for account lock status

@@ -287,8 +287,6 @@ const clientSchema = new mongoose.Schema({
 });
 
 // Index for better query performance (only for fields that don't have unique: true)
-clientSchema.index({ clientId: 1 });
-clientSchema.index({ email: 1 });
 clientSchema.index({ status: 1 });
 clientSchema.index({ 'credentials.platform': 1 });
 

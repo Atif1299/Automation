@@ -414,6 +414,7 @@
                                     <div class="file-actions">
                                         <button class="action-btn" onclick="viewFile('<%= file._id %>', '<%= file.originalName %>')">View</button>
                                         <button class="action-btn" onclick="downloadFile('<%= file._id %>', '<%= file.originalName %>')">Download</button>
+                                        <button class="action-btn delete-btn" onclick="deleteFile('<%= file._id %>', '<%= file.originalName %>')">Delete</button>
                                     </div>
                                 </div>
                             <% }); %>

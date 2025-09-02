@@ -4,25 +4,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Client = require('../models/Client');
+const { uploadFileToGCS } = require('../config/gcs');
 
-// Configure multer for client file uploads
-const clientStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const clientId = req.params.id;
-        const uploadDir = path.join(__dirname, '../uploads', clientId);
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        const timestamp = Date.now();
-        const originalName = file.originalname.replace(/[^a-zA-Z0-9\._-]/g, '');
-        cb(null, `${timestamp}-${originalName}`);
-    }
-});
-
-const clientUpload = multer({ storage: clientStorage });
+// Configure multer to use memory storage, as files will be streamed to GCS
+const clientUpload = multer({ storage: multer.memoryStorage() });
 
 // Client dashboard route
 router.get('/:id', async (req, res) => {
@@ -114,22 +99,26 @@ router.post('/:id/upload', clientUpload.single('file'), async (req, res) => {
 
         const client = await Client.findByClientId(clientId);
         if (!client) {
-            fs.unlinkSync(file.path); // Clean up uploaded file
             return res.status(404).json({ error: 'Client not found' });
         }
 
-        const relativePath = path.join(clientId, file.filename);
+        // Create a unique filename for GCS
+        const gcsFileName = `${clientId}/${Date.now()}-${file.originalname}`;
+
+        // Upload the file to GCS
+        const gcsUrl = await uploadFileToGCS(file.buffer, gcsFileName);
 
         const newFile = client.uploadedFiles.create({
-            fileName: file.filename,
+            fileName: gcsFileName,
             originalName: file.originalname,
             fileSize: file.size,
             fileType: file.mimetype,
             uploadDate: new Date(),
             status: 'uploaded',
             category: 'data',
-            relativePath: relativePath,
-            diskPath: file.path,
+            cloudProvider: 'google-cloud',
+            cloudPath: gcsFileName,
+            cloudUrl: gcsUrl,
             isActive: true,
         });
         client.uploadedFiles.push(newFile);
@@ -141,8 +130,8 @@ router.post('/:id/upload', clientUpload.single('file'), async (req, res) => {
             source: 'client',
             timestamp: new Date(),
             fileInfo: {
-                fileId: newFile._id, // Add the fileId to the log
-                fileName: file.filename,
+                fileId: newFile._id,
+                fileName: gcsFileName,
                 originalName: file.originalname,
                 category: 'data'
             }
@@ -150,18 +139,19 @@ router.post('/:id/upload', clientUpload.single('file'), async (req, res) => {
 
         await client.save();
 
-        console.log(`✅ File uploaded for client ${clientId}: ${file.originalname}`);
+        console.log(`✅ File uploaded to GCS for client ${clientId}: ${file.originalname}`);
 
         res.json({
             success: true,
             message: 'File uploaded successfully'
         });
     } catch (error) {
-        console.error('❌ Error uploading file:', error);
-        if (req.file) {
-            fs.unlinkSync(req.file.path); // Clean up uploaded file on error
-        }
-        res.status(500).json({ error: 'Failed to upload file' });
+        console.error('❌ Detailed GCS Upload Error (Client):', error.message);
+        console.error(error.stack);
+        res.status(500).json({ 
+            error: 'Failed to upload file due to a server configuration issue.',
+            details: error.message
+        });
     }
 });
 
