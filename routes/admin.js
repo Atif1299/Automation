@@ -288,6 +288,33 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
     }
 });
 
+// GET route to search and filter clients
+router.get('/clients', async (req, res) => {
+    try {
+        const { search, status } = req.query;
+        let query = {};
+
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { clientId: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+
+        const clients = await Client.find(query).sort({ createdAt: -1 });
+        res.json({ success: true, clients });
+
+    } catch (error) {
+        console.error('❌ Error searching clients:', error);
+        res.status(500).json({ success: false, message: 'Failed to search clients' });
+    }
+});
+
 // GET route to fetch client messages (must come before the general /clients/:clientId route)
 router.get('/clients/:clientId/messages', async (req, res) => {
     try {
@@ -854,6 +881,38 @@ router.get('/file-stats', async (req, res) => {
             message: 'Error getting file statistics',
             error: error.message
         });
+    }
+});
+
+// Route to handle activity updates from the admin panel
+router.post('/activity-update', async (req, res) => {
+    try {
+        const { clientId, status, progress, message } = req.body;
+
+        if (!clientId || !message) {
+            return res.status(400).json({ success: false, message: 'Client ID and message are required' });
+        }
+
+        const client = await Client.findOne({ clientId });
+        if (!client) {
+            return res.status(404).json({ success: false, message: 'Client not found' });
+        }
+
+        const activityLog = {
+            type: 'info',
+            message: message,
+            details: `Status: ${status}, Progress: ${progress}%`,
+            source: 'admin',
+            timestamp: new Date(),
+        };
+
+        client.activityLogs.push(activityLog);
+        await client.save();
+
+        res.json({ success: true, message: 'Activity updated successfully' });
+    } catch (error) {
+        console.error('❌ Error updating client activity:', error);
+        res.status(500).json({ success: false, message: 'Failed to update activity' });
     }
 });
 

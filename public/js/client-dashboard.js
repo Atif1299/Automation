@@ -270,19 +270,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayActivityLogs(logs) {
         const activityWindow = document.getElementById('activity-window');
         if (!activityWindow) return;
-        
+
+        // Filter logs to show only file transfers, admin progress updates, and key client actions
+        const filteredLogs = logs.filter(log => {
+            const isAdminProgressUpdate = log.source === 'admin' && log.details && log.details.includes('Status:');
+            const isFileTransfer = log.fileInfo;
+            const isClientCredentialSave = log.source === 'client' && log.message.includes('credentials saved');
+            const isClientConfigSave = log.source === 'client' && log.message.includes('configuration saved');
+
+            return isAdminProgressUpdate || isFileTransfer || isClientCredentialSave || isClientConfigSave;
+        });
+
         // Clear existing logs
         activityWindow.innerHTML = '';
-        
-        if (logs.length === 0) {
-            activityWindow.innerHTML = '<p class="no-logs">No activity logs available.</p>';
+
+        if (filteredLogs.length === 0) {
+            activityWindow.innerHTML = '<p class="no-logs">No activity updates available.</p>';
             return;
         }
-        
-        logs.forEach(log => {
+
+        filteredLogs.forEach(log => {
             const logEntry = document.createElement('div');
             logEntry.className = `log-entry ${log.type}`;
-            
+
             const timeStr = new Date(log.timestamp).toLocaleString();
             
             let logHTML = `
@@ -331,12 +341,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Load logs when Activity Monitor tab is opened
-    if (document.getElementById('activity-monitor')) {
-        loadActivityLogs();
-        
-        // Reload logs every 30 seconds for real-time updates
-        setInterval(loadActivityLogs, 30000);
+    const activityTab = document.querySelector('[data-tab="activity"]');
+    if (activityTab) {
+        activityTab.addEventListener('click', () => {
+            loadActivityLogs();
+        });
     }
+    // Also load logs if the activity tab is already active on page load
+    if (document.getElementById('activity')?.classList.contains('active')) {
+        loadActivityLogs();
+    }
+    setInterval(loadActivityLogs, 30000);
     
     // Activity log functionality
     const logEntries = document.querySelectorAll('.log-entry');
@@ -981,20 +996,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // END OF OLD COMPLEX FUNCTIONS */
 
-    // Real-time updates simulation
-    setInterval(() => {
-        const messages = [
-            'Processing contact data...',
-            'Enriching contact information...',
-            'Validating email addresses...',
-            'Updating campaign status...'
-        ];
-        
-        if (Math.random() > 0.7) { // 30% chance every 5 seconds
-            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-            addLogEntry('info', randomMessage);
-        }
-    }, 5000);
 });
 
 // Logout functionality (global function)
