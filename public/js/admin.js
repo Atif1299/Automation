@@ -1247,3 +1247,154 @@ function updateClientsGrid(clients) {
 // Make functions globally available
 window.downloadFile = downloadFile;
 window.viewFile = viewFile;
+
+// Fetch and update performance
+async function fetchAndUpdatePerformance() {
+    const agentId = document.getElementById('phantombuster-agent-id').value;
+    const clientId = document.getElementById('performance-client-selector').value;
+    const campaignId = document.getElementById('performance-campaign-selector').value;
+
+    if (!agentId || !clientId || !campaignId) {
+        showNotification('Please select a client, campaign, and enter a PhantomBuster Agent ID', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/admin/fetch-phantombuster-results', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ agentId }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            const phantomBusterData = result.data.json;
+            const updateResponse = await fetch('/admin/campaign-performance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ clientId, campaignId, phantomBusterData }),
+            });
+
+            const updateResult = await updateResponse.json();
+
+            if (updateResult.success) {
+                showNotification('Campaign performance updated successfully!', 'success');
+            } else {
+                throw new Error(updateResult.message || 'Failed to update performance');
+            }
+        } else {
+            throw new Error(result.message || 'Failed to fetch PhantomBuster results');
+        }
+    } catch (error) {
+        console.error('Error fetching and updating performance:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+    }
+}
+
+// Save API Key
+async function saveApiKey() {
+    const apiKey = document.getElementById('phantombuster-api-key').value;
+    if (!apiKey) {
+        showNotification('Please enter an API key', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/admin/api-key', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ apiKey }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('API key saved successfully!', 'success');
+        } else {
+            throw new Error(result.message || 'Failed to save API key');
+        }
+    } catch (error) {
+        console.error('Error saving API key:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+    }
+}
+
+// Campaign Performance Functions
+async function updateCampaignPerformance() {
+    const clientId = document.getElementById('performance-client-selector').value;
+    const campaignId = document.getElementById('performance-campaign-selector').value;
+    const jsonInput = document.getElementById('phantombuster-json').value;
+
+    if (!clientId || !campaignId || !jsonInput) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+    }
+
+    try {
+        const phantomBusterData = JSON.parse(jsonInput);
+        const response = await fetch('/admin/campaign-performance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ clientId, campaignId, phantomBusterData }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('Campaign performance updated successfully!', 'success');
+        } else {
+            throw new Error(result.message || 'Failed to update performance');
+        }
+    } catch (error) {
+        console.error('Error updating campaign performance:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const clientSelector = document.getElementById('performance-client-selector');
+    const campaignSelector = document.getElementById('performance-campaign-selector');
+
+    if (clientSelector) {
+        clientSelector.addEventListener('change', async (e) => {
+            const clientId = e.target.value;
+            campaignSelector.innerHTML = '<option value="">Loading campaigns...</option>';
+            campaignSelector.disabled = true;
+
+            if (!clientId) {
+                campaignSelector.innerHTML = '<option value="">Select a campaign...</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/clients/${clientId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    campaignSelector.innerHTML = '<option value="">Select a campaign...</option>';
+                    data.client.campaigns.forEach(campaign => {
+                        const option = document.createElement('option');
+                        option.value = campaign._id;
+                        option.textContent = campaign.name;
+                        campaignSelector.appendChild(option);
+                    });
+                    campaignSelector.disabled = false;
+                } else {
+                    throw new Error(data.message || 'Failed to load campaigns');
+                }
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+                campaignSelector.innerHTML = '<option value="">Error loading campaigns</option>';
+            }
+        });
+    }
+});

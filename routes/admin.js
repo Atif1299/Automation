@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const axios = require('axios');
 
 // Configure multer for admin file uploads with enhanced organization
 const adminStorage = multer.diskStorage({
@@ -50,12 +51,13 @@ const adminUpload = multer({
     }
 });
 
-// Import Client model only if database is connected
-let Client;
+// Import models only if database is connected
+let Client, Admin;
 try {
     Client = require('../models/Client');
+    Admin = require('../models/Admin');
 } catch (error) {
-    console.warn('⚠️ Client model not loaded - database may be unavailable');
+    console.warn('⚠️ Models not loaded - database may be unavailable');
 }
 
 router.get('/', async (req, res) => {
@@ -78,22 +80,32 @@ router.get('/', async (req, res) => {
             });
         }
 
-        // Fetch all clients from database
-        const clients = await Client.find({}).sort({ createdAt: -1 }).maxTimeMS(5000);
-        
-        // Calculate statistics
-        const stats = {
-            totalClients: clients.length,
-            activeClients: clients.filter(c => c.status === 'active').length,
-            totalMessages: clients.reduce((sum, c) => sum + (c.activityLogs?.length || 0), 0),
-            newSignups: clients.filter(c => {
-                const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-                return c.createdAt > oneWeekAgo;
-            }).length
+        // Fetch initial clients for display
+        const clients = await Client.find({}).sort({ createdAt: -1 }).limit(50);
+
+        // Optimized statistics calculation using aggregation
+        const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const statsArr = await Client.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalClients: { $sum: 1 },
+                    activeClients: { $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] } },
+                    totalMessages: { $sum: { $size: "$activityLogs" } },
+                    newSignups: { $sum: { $cond: [{ $gt: ["$createdAt", oneWeekAgo] }, 1, 0] } }
+                }
+            }
+        ]);
+
+        const stats = statsArr[0] || {
+            totalClients: 0,
+            activeClients: 0,
+            totalMessages: 0,
+            newSignups: 0
         };
-        
-        res.render('admin/dashboard', { 
-            title: 'Admin Dashboard', 
+
+        res.render('admin/dashboard', {
+            title: 'Admin Dashboard',
             layout: false,
             isAdminDashboard: true,
             clients: clients,
@@ -913,6 +925,92 @@ router.post('/activity-update', async (req, res) => {
     } catch (error) {
         console.error('❌ Error updating client activity:', error);
         res.status(500).json({ success: false, message: 'Failed to update activity' });
+    }
+});
+
+// Route to handle PhantomBuster performance data updates
+router.post('/campaign-performance', async (req, res) => {
+    try {
+        const { clientId, campaignId, phantomBusterData } = req.body;
+
+        if (!clientId || !campaignId || !phantomBusterData) {
+            return res.status(400).json({ success: false, message: 'Client ID, Campaign ID, and PhantomBuster data are required' });
+        }
+
+        const client = await Client.findOne({ clientId });
+        if (!client) {
+            return res.status(404).json({ success: false, message: 'Client not found' });
+        }
+
+        const campaign = client.campaigns.id(campaignId);
+        if (!campaign) {
+            return res.status(404).json({ success: false, message: 'Campaign not found' });
+        }
+
+        campaign.performanceData = {
+            collectedProfiles: phantomBusterData.collectedProfiles,
+            sentInvites: phantomBusterData.sentInvites,
+            acceptedRequests: phantomBusterData.acceptedRequests,
+            timeSaved: phantomBusterData.timeSaved,
+            lastUpdated: new Date()
+        };
+
+        await client.save();
+
+        res.json({ success: true, message: 'Campaign performance data updated successfully' });
+    } catch (error) {
+        console.error('❌ Error updating campaign performance:', error);
+        res.status(500).json({ success: false, message: 'Failed to update campaign performance' });
+    }
+});
+
+// API Settings page
+router.get('/api-settings', (req, res) => {
+    res.render('admin/api-settings', { title: 'API Settings', layout: false });
+});
+
+// Save API key
+router.post('/api-key', async (req, res) => {
+    try {
+        const { apiKey } = req.body;
+        if (!apiKey) {
+            return res.status(400).json({ success: false, message: 'API key is required' });
+        }
+
+        // Use updateOne with upsert to create or update the admin settings
+        await Admin.updateOne({}, { phantombusterApiKey: apiKey }, { upsert: true });
+
+        res.json({ success: true, message: 'API key saved successfully' });
+    } catch (error) {
+        console.error('❌ Error saving API key:', error);
+        res.status(500).json({ success: false, message: 'Failed to save API key' });
+    }
+});
+
+// Fetch PhantomBuster results
+router.post('/fetch-phantombuster-results', async (req, res) => {
+    try {
+        const { agentId } = req.body;
+        if (!agentId) {
+            return res.status(400).json({ success: false, message: 'Agent ID is required' });
+        }
+
+        const admin = await Admin.findOne({});
+        if (!admin || !admin.phantombusterApiKey) {
+            return res.status(400).json({ success: false, message: 'API key not configured' });
+        }
+
+        const response = await axios.get(`https://api.phantombuster.com/api/v2/agents/fetch?id=${agentId}`, {
+            headers: {
+                'X-Phantombuster-Key': admin.phantombusterApiKey,
+                'Accept': 'application/json'
+            }
+        });
+
+        res.json({ success: true, data: response.data });
+    } catch (error) {
+        console.error('❌ Error fetching PhantomBuster results:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch PhantomBuster results' });
     }
 });
 

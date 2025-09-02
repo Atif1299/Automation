@@ -163,6 +163,34 @@ document.addEventListener('DOMContentLoaded', function() {
         conversationArea.scrollTop = conversationArea.scrollHeight;
     }
 
+    // Auto-scroll to bottom when messages tab is opened
+    const messagesTab = document.querySelector('[data-tab="messages"]');
+    if (messagesTab) {
+        messagesTab.addEventListener('click', () => {
+            setTimeout(() => {
+                const conversationArea = document.querySelector('.conversation-area-tab');
+                if (conversationArea) {
+                    conversationArea.scrollTop = conversationArea.scrollHeight;
+                }
+            }, 100);
+        });
+    }
+
+    // Campaign Performance Tab
+    const performanceTab = document.querySelector('[data-tab="performance"]');
+    if (performanceTab) {
+        performanceTab.addEventListener('click', () => {
+            loadCampaignPerformance();
+        });
+    }
+
+    const campaignFilter = document.getElementById('campaign-filter');
+    if (campaignFilter) {
+        campaignFilter.addEventListener('change', () => {
+            loadCampaignPerformance();
+        });
+    }
+
     // Show notification
     function showNotification(message, type) {
         // You can implement a toast notification here
@@ -997,6 +1025,194 @@ document.addEventListener('DOMContentLoaded', function() {
     // END OF OLD COMPLEX FUNCTIONS */
 
 });
+
+// Campaign Performance Functions
+async function loadCampaignPerformance() {
+    const clientId = window.location.pathname.split('/').pop();
+    const campaignId = document.getElementById('campaign-filter').value;
+
+    try {
+        const response = await fetch(`/admin/clients/${clientId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            let campaigns = data.client.campaigns;
+            if (campaignId !== 'all') {
+                campaigns = campaigns.filter(c => c._id === campaignId);
+            }
+            renderCampaignPerformance(campaigns);
+        } else {
+            throw new Error(data.message || 'Failed to load campaign data');
+        }
+    } catch (error) {
+        console.error('Error loading campaign performance:', error);
+        const performanceGrid = document.querySelector('.performance-grid');
+        performanceGrid.innerHTML = '<p class="error">Could not load campaign performance data.</p>';
+    }
+}
+
+function renderCampaignPerformance(campaigns) {
+    const performanceGrid = document.querySelector('.performance-grid');
+    const chartContainer = document.querySelector('.performance-chart-container');
+    performanceGrid.innerHTML = '';
+
+    if (campaigns.length === 0) {
+        performanceGrid.innerHTML = '<p class="no-data">No campaign data to display.</p>';
+        chartContainer.style.display = 'none';
+        return;
+    }
+
+    let chartData = {
+        labels: [],
+        datasets: [
+            {
+                label: 'Profiles Collected',
+                data: [],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+            },
+            {
+                label: 'Invites Sent',
+                data: [],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true,
+            },
+            {
+                label: 'Requests Accepted',
+                data: [],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+            }
+        ]
+    };
+
+    campaigns.forEach(campaign => {
+        if (campaign.performanceData) {
+            const { collectedProfiles, sentInvites, acceptedRequests, timeSaved, lastUpdated } = campaign.performanceData;
+            const inviteRate = sentInvites > 0 ? ((acceptedRequests / sentInvites) * 100).toFixed(0) : 0;
+            const timeSavedFormatted = timeSaved ? `${Math.floor(timeSaved / 3600000)}h${Math.floor((timeSaved % 3600000) / 60000)}m` : '0h 0m';
+
+            const performanceCard = document.createElement('div');
+            performanceCard.className = 'performance-card';
+            performanceCard.innerHTML = `
+                <h3>${campaign.name}</h3>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="value">${timeSavedFormatted}</span>
+                        <span class="label">Time Saved</span>
+                    </div>
+                    <div class="stat">
+                        <span class="value">${collectedProfiles || 0}</span>
+                        <span class="label">Profiles Collected</span>
+                    </div>
+                    <div class="stat">
+                        <span class="value">${sentInvites || 0}</span>
+                        <span class="label">Invites Sent</span>
+                    </div>
+                    <div class="stat">
+                        <span class="value">${acceptedRequests || 0} <span class="percentage">(${inviteRate}%)</span></span>
+                        <span class="label">Requests Accepted</span>
+                    </div>
+                </div>
+                <div class="last-updated">
+                    Last updated: ${new Date(lastUpdated).toLocaleString()}
+                </div>
+            `;
+            performanceGrid.appendChild(performanceCard);
+
+            chartData.labels.push(new Date(lastUpdated).toLocaleDateString());
+            chartData.datasets[0].data.push(collectedProfiles || 0);
+            chartData.datasets[1].data.push(sentInvites || 0);
+            chartData.datasets[2].data.push(acceptedRequests || 0);
+        }
+    });
+
+    if (chartData.labels.length > 0) {
+        chartContainer.style.display = 'block';
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    } else {
+        chartContainer.style.display = 'none';
+    }
+}
+
+// Campaign Performance Functions
+async function loadCampaignPerformance() {
+    const clientId = window.location.pathname.split('/').pop();
+    const campaignId = document.getElementById('campaign-filter').value;
+
+    try {
+        const response = await fetch(`/admin/clients/${clientId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            let campaigns = data.client.campaigns;
+            if (campaignId !== 'all') {
+                campaigns = campaigns.filter(c => c._id === campaignId);
+            }
+            renderCampaignPerformance(campaigns);
+        } else {
+            throw new Error(data.message || 'Failed to load campaign data');
+        }
+    } catch (error) {
+        console.error('Error loading campaign performance:', error);
+        const performanceGrid = document.querySelector('.performance-grid');
+        performanceGrid.innerHTML = '<p class="error">Could not load campaign performance data.</p>';
+    }
+}
+
+function renderCampaignPerformance(campaigns) {
+    const performanceGrid = document.querySelector('.performance-grid');
+    performanceGrid.innerHTML = '';
+
+    if (campaigns.length === 0) {
+        performanceGrid.innerHTML = '<p class="no-data">No campaign data to display.</p>';
+        return;
+    }
+
+    campaigns.forEach(campaign => {
+        if (campaign.performanceData) {
+            const performanceCard = document.createElement('div');
+            performanceCard.className = 'performance-card';
+            performanceCard.innerHTML = `
+                <h3>${campaign.name}</h3>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="value">${campaign.performanceData.collectedProfiles || 0}</span>
+                        <span class="label">Profiles Collected</span>
+                    </div>
+                    <div class="stat">
+                        <span class="value">${campaign.performanceData.sentInvites || 0}</span>
+                        <span class="label">Invites Sent</span>
+                    </div>
+                    <div class="stat">
+                        <span class="value">${campaign.performanceData.acceptedRequests || 0}</span>
+                        <span class="label">Requests Accepted</span>
+                    </div>
+                </div>
+                <div class="last-updated">
+                    Last updated: ${new Date(campaign.performanceData.lastUpdated).toLocaleString()}
+                </div>
+            `;
+            performanceGrid.appendChild(performanceCard);
+        }
+    });
+}
 
 // Logout functionality (global function)
 function handleLogout(event) {
