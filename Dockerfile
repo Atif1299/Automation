@@ -6,4 +6,4 @@ COPY . .
 RUN mkdir -p uploads/admin-files
 EXPOSE 8080
 ENV PORT=8080
-CMD ["nodemon", "server.js"]
+CMD ["node", "server.js"]
