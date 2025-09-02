@@ -1,0 +1,47 @@
+<!-- SIDEBAR NAVIGATION HTML STRUCTURE -->
+<!-- Replace the existing <nav> section in header.ejs with this -->
+
+<div class="sidebar-nav" id="sidebarNav">
+    <div class="logo-section">
+        <a href="/" class="logo">Verba Srl Automation</a>
+    </div>
+    
+    <ul class="nav-links">
+        <li><a href="/auth/admin-login">Admin Login</a></li>
+        <li><a href="/auth/client-login">Client Login</a></li>
+        <li>
+            <button id="smoothScrollToggle" class="smooth-scroll-toggle" title="Toggle Smooth Scrolling">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L3 7l9 5 9-5-9-5zM3 17l9 5 9-5M3 12l9 5 9-5"/>
+                </svg>
+            </button>
+        </li>
+    </ul>
+</div>
+
+<button class="sidebar-toggle" id="sidebarToggle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+</button>
+
+<!-- Add this JavaScript for sidebar functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebarNav');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const body = document.body;
+    
+    toggleBtn.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        body.classList.toggle('sidebar-collapsed');
+    });
+    
+    // Mobile toggle
+    if (window.innerWidth <= 768) {
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('mobile-open');
+        });
+    }
+});
+</script>

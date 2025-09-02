@@ -1,0 +1,151 @@
+/* 💊 FLOATING PILL NAVIGATION - Modern Minimalist Design */
+nav {
+    background: transparent;
+    padding: 20px 0;
+    position: sticky;
+    top: 20px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+}
+
+nav .logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    text-decoration: none;
+    letter-spacing: -0.02em;
+    transition: all 0.3s ease;
+}
+
+nav .logo:hover {
+    color: #00d4ff;
+    transform: scale(1.05);
+}
+
+nav .nav-links {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+nav .nav-links:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+nav .nav-links li {
+    position: relative;
+}
+
+nav .nav-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 24px;
+    border-radius: 25px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
+    position: relative;
+    overflow: hidden;
+}
+
+nav .nav-links a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #00d4ff, #4ecdc4);
+    border-radius: 25px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+nav .nav-links a:hover::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+nav .nav-links a:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+nav .nav-links a:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Smooth Scroll Toggle in Pill Style */
+.smooth-scroll-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-light);
+    padding: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.smooth-scroll-toggle:hover {
+    background: linear-gradient(135deg, #00d4ff, #4ecdc4);
+    border-color: transparent;
+    color: #ffffff;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 212, 255, 0.4);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    nav .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 8px;
+        border-radius: 25px;
+    }
+    
+    nav .nav-links a {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
