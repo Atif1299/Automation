@@ -243,8 +243,9 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
             lastAccessed: null
         };
 
-        // Add file to client's uploaded files
-        client.uploadedFiles.push(fileRecord);
+        // Add file to client's uploaded files and get the new sub-document
+        const newFile = client.uploadedFiles.create(fileRecord);
+        client.uploadedFiles.push(newFile);
 
         // Add activity log entry
         const activityMessage = message ? 
@@ -258,6 +259,7 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
             timestamp: new Date(),
             source: 'admin',
             fileInfo: {
+                fileId: newFile._id, // Add the fileId to the log
                 fileName: file.filename,
                 originalName: file.originalname,
                 category: category || 'other',
@@ -539,70 +541,55 @@ router.delete('/clients/:clientId', async (req, res) => {
     }
 });
 
+// Load the file index
+const fileIndexPath = path.join(__dirname, '../config/file-index.json');
+let fileIndex = {};
+try {
+    if (fs.existsSync(fileIndexPath)) {
+        fileIndex = JSON.parse(fs.readFileSync(fileIndexPath, 'utf-8'));
+    }
+} catch (error) {
+    console.error('Error loading file index:', error);
+}
+
 // Enhanced download file route with analytics and cloud-ready structure
 router.get('/download-file/:fileId', async (req, res) => {
     try {
         const fileId = req.params.fileId;
-        
         console.log('🔍 Download request for fileId:', fileId);
-        
-        // Try to find file in database first for metadata
-        let fileRecord = null;
-        if (Client) {
-            try {
-                const clientWithFile = await Client.findOne({
-                    'uploadedFiles._id': fileId
-                });
-                
-                if (clientWithFile) {
-                    fileRecord = clientWithFile.uploadedFiles.find(f => f._id.toString() === fileId);
-                    console.log('� Found file record in database:', fileRecord ? 'Yes' : 'No');
-                }
-            } catch (dbError) {
-                console.warn('⚠️ Database lookup failed, proceeding with file system only');
+
+        const clientWithFile = await Client.findOne({ 'uploadedFiles._id': fileId });
+        if (!clientWithFile) {
+            return res.status(404).json({ success: false, message: 'File record not found in any client.' });
+        }
+        const fileRecord = clientWithFile.uploadedFiles.id(fileId);
+
+        let filePath = null;
+        const projectRoot = path.join(__dirname, '..');
+
+        // Method 1: Use the pre-built file index (fastest and most reliable)
+        if (fileIndex[fileRecord.fileName]) {
+            const relativePath = fileIndex[fileRecord.fileName];
+            const absolutePath = path.join(projectRoot, relativePath);
+            if (fs.existsSync(absolutePath)) {
+                filePath = absolutePath;
+                console.log(`✅ Found file using index: ${filePath}`);
             }
         }
-        
-        // Use database paths (RELIABLE METHOD)
-        let filePath;
-        
-        console.log('🔍 File record details:');
-        console.log('  - diskPath:', fileRecord.diskPath);
-        console.log('  - relativePath:', fileRecord.relativePath);
-        console.log('  - fileName:', fileRecord.fileName);
-        console.log('  - originalName:', fileRecord.originalName);
-        
-        if (fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
+
+        // Method 2: Try database paths if index fails
+        if (!filePath && fileRecord.diskPath && fs.existsSync(fileRecord.diskPath)) {
             filePath = fileRecord.diskPath;
-            console.log('✅ Using database diskPath');
-        } else if (fileRecord.relativePath) {
+            console.log(`✅ Found file using diskPath: ${filePath}`);
+        }
+        if (!filePath && fileRecord.relativePath && fs.existsSync(path.join(__dirname, '../uploads', fileRecord.relativePath))) {
             filePath = path.join(__dirname, '../uploads', fileRecord.relativePath);
-            console.log('🔍 Checking relativePath:', filePath);
-            if (fs.existsSync(filePath)) {
-                console.log('✅ Using database relativePath');
-            } else {
-                console.log('❌ File missing from expected location');
-                console.log('  - Tried diskPath:', fileRecord.diskPath);
-                console.log('  - Tried relativePath:', filePath);
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'File missing from storage',
-                    expectedPath: filePath
-                });
-            }
-        } else {
-            console.log('❌ No valid path in database record');
-            console.log('🔍 File record details:', {
-                fileName: fileRecord.fileName,
-                originalName: fileRecord.originalName,
-                diskPath: fileRecord.diskPath,
-                relativePath: fileRecord.relativePath,
-                fileSize: fileRecord.fileSize
-            });
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Invalid file record - no path information' 
-            });
+            console.log(`✅ Found file using relativePath: ${filePath}`);
+        }
+
+        if (!filePath) {
+            console.error(`❌ Critical: Could not find file ${fileRecord.fileName} on disk.`);
+            return res.status(404).json({ success: false, message: 'File not found on server storage.' });
         }
         
         // Get file stats

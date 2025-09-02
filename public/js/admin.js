@@ -1363,6 +1363,7 @@ async function updateCampaignPerformance() {
 document.addEventListener('DOMContentLoaded', function() {
     const clientSelector = document.getElementById('performance-client-selector');
     const campaignSelector = document.getElementById('performance-campaign-selector');
+    const automationTypeSelector = document.getElementById('automation-type');
 
     if (clientSelector) {
         clientSelector.addEventListener('change', async (e) => {
@@ -1382,10 +1383,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     campaignSelector.innerHTML = '<option value="">Select a campaign...</option>';
                     data.client.campaigns.forEach(campaign => {
-                        const option = document.createElement('option');
-                        option.value = campaign._id;
-                        option.textContent = campaign.name;
-                        campaignSelector.appendChild(option);
+                        if (automationTypeSelector && automationTypeSelector.value === campaign.automationType) {
+                            const option = document.createElement('option');
+                            option.value = campaign._id;
+                            option.textContent = campaign.name;
+                            campaignSelector.appendChild(option);
+                        }
                     });
                     campaignSelector.disabled = false;
                 } else {
