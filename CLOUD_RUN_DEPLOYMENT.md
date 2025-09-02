@@ -202,9 +202,87 @@ gcloud run revisions list --service automation-website --region us-central1
 3. **Database connection issues**: Verify MongoDB connection string and whitelist IPs
 4. **File upload issues**: Consider using Google Cloud Storage for file uploads
 
-## Automatic Deployment (CI/CD)
+## 🔥 DIRECT GITHUB DEPLOYMENT (Recommended Method)
 
-Create `.github/workflows/deploy.yml` for automatic deployment:
+### Step 1: Prepare Repository
+1. **Push your code to GitHub:**
+```bash
+git add .
+git commit -m "Ready for Cloud Run deployment"
+git push origin main
+```
+
+2. **Add required files to your repo root:**
+
+**Dockerfile:**
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN mkdir -p uploads/admin-files
+EXPOSE 8080
+ENV PORT=8080
+CMD ["node", "server.js"]
+```
+
+**.dockerignore:**
+```
+node_modules
+.git
+.env
+npm-debug.log
+```
+
+### Step 2: Connect GitHub to Cloud Run
+
+1. **Go to Cloud Run Console:**
+   - Visit: https://console.cloud.google.com/run
+   - Click "Create Service"
+
+2. **Select "Continuously deploy new revisions from a source repository"**
+
+3. **Set up Cloud Build (one-time setup):**
+   - Click "Set up with Cloud Build"
+   - Authenticate with GitHub
+   - Select your repository: `Atif1299/Automation`
+   - Branch: `main` or `improvements`
+
+4. **Configure build:**
+   - Build Type: `Dockerfile`
+   - Source location: `/Dockerfile`
+
+### Step 3: Deploy Settings
+```
+Service name: automation-website
+Region: us-central1
+CPU allocation: CPU is only allocated during request processing
+Minimum instances: 0
+Maximum instances: 10
+Memory: 512 MiB
+CPU: 1
+Port: 8080
+Allow unauthenticated invocations: ✓
+```
+
+### Step 4: Set Environment Variables
+```
+NODE_ENV=production
+MONGODB_URI=your-mongodb-atlas-connection-string
+JWT_SECRET=your-jwt-secret
+SESSION_SECRET=your-session-secret
+```
+
+### Step 5: That's It! 🎉
+- **Every push to main branch = Automatic deployment**
+- **View builds:** Cloud Build History
+- **View logs:** Cloud Run service logs
+- **Custom domain:** Map in Cloud Run console
+
+## Alternative: GitHub Actions (Advanced)
+
+Create `.github/workflows/deploy.yml`:
 ```yaml
 name: Deploy to Cloud Run
 
