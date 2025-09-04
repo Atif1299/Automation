@@ -2030,3 +2030,8 @@ textarea.form-control {
     width: 16px;
     height: 16px;
 }
+
+.api-settings-form,
+.performance-form {
+    width: 50%;
+}
