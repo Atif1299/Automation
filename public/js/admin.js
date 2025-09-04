@@ -881,6 +881,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', logout);
     }
+
+    // Initialize file management client selector
+    const filesClientSelector = document.getElementById('files-client-selector');
+    if (filesClientSelector) {
+        filesClientSelector.addEventListener('change', (e) => {
+            const clientId = e.target.value;
+            if (clientId) {
+                updateFilesGrid(clientId);
+            } else {
+                // Fetch all files if no client is selected
+                fetchAllFiles();
+            }
+        });
+    }
+
+    // Load all files by default when the page loads
+    fetchAllFiles();
     
     console.log('✅ Admin Dashboard initialized successfully');
 });
@@ -1170,6 +1187,38 @@ function viewFile(fileId, originalName) {
     }
 }
 
+// File delete functionality
+async function deleteFile(fileId, originalName) {
+    if (!confirm(`Are you sure you want to permanently delete the file "${originalName}"? This action cannot be undone.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/admin/delete-file/${encodeURIComponent(fileId)}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('File deleted successfully!', 'success');
+            // Remove the file item from the UI
+            const fileItem = document.querySelector(`[onclick*="deleteFile('${fileId}'"]`).closest('.file-item');
+            if (fileItem) {
+                fileItem.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    fileItem.remove();
+                }, 300);
+            }
+        } else {
+            throw new Error(result.message || 'Failed to delete file');
+        }
+    } catch (error) {
+        console.error('Error deleting file:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+    }
+}
+
 // Function to search and filter clients
 async function searchAndFilterClients() {
     const search = document.querySelector('.search-input').value;
@@ -1247,6 +1296,92 @@ function updateClientsGrid(clients) {
 // Make functions globally available
 window.downloadFile = downloadFile;
 window.viewFile = viewFile;
+window.deleteFile = deleteFile;
+
+// Function to update the files grid for a selected client
+async function updateFilesGrid(clientId) {
+    const filesGrid = document.getElementById('files-grid');
+    filesGrid.innerHTML = '<div class="loading-files"><i class="fas fa-spinner fa-spin"></i> Loading files...</div>';
+
+    try {
+        const response = await fetch(`/admin/clients/${clientId}`);
+        const data = await response.json();
+
+        if (data.success && data.client) {
+            const files = data.client.uploadedFiles;
+            if (files && files.length > 0) {
+                const filesHTML = files.map(file => `
+                    <div class="file-item">
+                        <div class="file-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="file-info">
+                            <h4>${file.originalName}</h4>
+                            <p>${(file.fileSize / 1024).toFixed(2)} KB • ${new Date(file.uploadDate).toLocaleDateString()}</p>
+                        </div>
+                        <div class="file-actions">
+                            <button class="action-btn" onclick="viewFile('${file._id}', '${file.originalName}')">View</button>
+                            <button class="action-btn" onclick="downloadFile('${file._id}', '${file.originalName}')">Download</button>
+                            <button class="action-btn delete-btn" onclick="deleteFile('${file._id}', '${file.originalName}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+                filesGrid.innerHTML = `<div class="file-category"><h3>Uploaded Files</h3><div class="files-list">${filesHTML}</div></div>`;
+            } else {
+                filesGrid.innerHTML = '<div class="no-files"><p>No files uploaded yet for this client.</p></div>';
+            }
+        } else {
+            throw new Error(data.message || 'Failed to load client files');
+        }
+    } catch (error) {
+        console.error('Error updating files grid:', error);
+        filesGrid.innerHTML = '<div class="no-files"><p>Error loading files. Please try again.</p></div>';
+    }
+}
+
+// Function to fetch and display all files from all clients
+async function fetchAllFiles() {
+    const filesGrid = document.getElementById('files-grid');
+    filesGrid.innerHTML = '<div class="loading-files"><i class="fas fa-spinner fa-spin"></i> Loading all files...</div>';
+
+    try {
+        const response = await fetch('/admin/all-files');
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.files && data.files.length > 0) {
+                const filesHTML = data.files.map(item => `
+                    <div class="file-item">
+                        <div class="file-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="file-info">
+                            <h4>${item.file.originalName}</h4>
+                            <p><strong>Client:</strong> ${item.clientName} • ${(item.file.fileSize / 1024).toFixed(2)} KB • ${new Date(item.file.uploadDate).toLocaleDateString()}</p>
+                        </div>
+                        <div class="file-actions">
+                            <button class="action-btn" onclick="viewFile('${item.file._id}', '${item.file.originalName}')">View</button>
+                            <button class="action-btn" onclick="downloadFile('${item.file._id}', '${item.file.originalName}')">Download</button>
+                            <button class="action-btn delete-btn" onclick="deleteFile('${item.file._id}', '${item.file.originalName}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+                filesGrid.innerHTML = `<div class="file-category"><h3>All Client Files</h3><div class="files-list">${filesHTML}</div></div>`;
+            } else {
+                filesGrid.innerHTML = '<div class="no-files"><p>No files have been uploaded by any client yet.</p></div>';
+            }
+        } else {
+            throw new Error(data.message || 'Failed to load all files');
+        }
+    } catch (error) {
+        console.error('Error fetching all files:', error);
+        filesGrid.innerHTML = '<div class="no-files"><p>Error loading files. Please try again.</p></div>';
+    }
+}
 
 // Fetch and update performance
 async function fetchAndUpdatePerformance() {

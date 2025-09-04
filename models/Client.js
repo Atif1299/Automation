@@ -128,19 +128,6 @@ const clientSchema = new mongoose.Schema({
             enum: ['uploaded', 'processing', 'processed', 'failed', 'admin_sent'],
             default: 'uploaded'
         },
-        // Enhanced metadata for production-ready system
-        relativePath: {
-            type: String,
-            required: false // Path relative to uploads directory
-        },
-        diskPath: {
-            type: String,
-            required: false // Full disk path (for local storage)
-        },
-        downloadPath: {
-            type: String,
-            required: false // Public download URL path
-        },
         fileHash: {
             type: String,
             required: false // For integrity checking
@@ -156,12 +143,6 @@ const clientSchema = new mongoose.Schema({
         lastAccessed: {
             type: Date,
             required: false
-        },
-        // Cloud storage fields (for future migration)
-        cloudProvider: {
-            type: String,
-            enum: ['local', 'aws-s3', 'google-cloud', 'azure'],
-            default: 'local'
         },
         cloudPath: {
             type: String,

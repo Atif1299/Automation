@@ -60,10 +60,6 @@ app.use(expressLayouts);
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/uploads/admin-files', express.static(path.join(__dirname, 'uploads/admin-files')));
-
 // Middleware to parse URL-encoded bodies and JSON
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
