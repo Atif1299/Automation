@@ -78,27 +78,6 @@ app.get('/', (req, res) => {
     res.render('home', { title: 'Home Page', layout: false });
 });
 
-// Authentication page routes
-app.get('/auth/client-login', (req, res) => {
-    res.render('auth/client-login', { title: 'Client Login', layout: false });
-});
-
-app.get('/auth/client-register', (req, res) => {
-    res.render('auth/client-register', { title: 'Client Registration', layout: false });
-});
-
-app.get('/auth/admin-login', (req, res) => {
-    res.render('auth/admin-login', { title: 'Admin Login', layout: false });
-});
-
-app.get('/auth/forgot-password', (req, res) => {
-    res.render('auth/forgot-password', { title: 'Forgot Password', layout: false });
-});
-
-app.get('/auth/reset-password/:token', (req, res) => {
-    res.render('auth/reset-password', { title: 'Reset Password', layout: false, token: req.params.token });
-});
-
 // Define routes
 const adminRoutes = require('./routes/admin');
 const clientRoutes = require('./routes/client');

@@ -18,6 +18,13 @@ const {
     authRateLimit 
 } = require('../../middleware/validation');
 
+// Page rendering routes
+router.get('/client-login', (req, res) => res.render('auth/client-login', { title: 'Client Login', layout: false }));
+router.get('/client-register', (req, res) => res.render('auth/client-register', { title: 'Client Registration', layout: false }));
+router.get('/admin-login', (req, res) => res.render('auth/admin-login', { title: 'Admin Login', layout: false }));
+router.get('/forgot-password', (req, res) => res.render('auth/forgot-password', { title: 'Forgot Password', layout: false }));
+router.get('/reset-password/:token', (req, res) => res.render('auth/reset-password', { title: 'Reset Password', layout: false, token: req.params.token }));
+
 // Client Registration
 router.post('/client/register', 
     authRateLimit,
