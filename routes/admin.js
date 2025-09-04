@@ -6,6 +6,7 @@ const path = require('path');
 const multer = require('multer');
 const axios = require('axios');
 const { uploadFileToGCS, getSignedUrl, deleteFileFromGCS } = require('../config/gcs');
+const { sendEmail } = require('../config/email');
 
 // Configure multer to use memory storage, as files will be streamed to GCS
 const adminUpload = multer({
@@ -174,6 +175,7 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
         // Upload the file to GCS
         const gcsUrl = await uploadFileToGCS(file.buffer, gcsFileName);
 
+        // Create the new file subdocument
         const newFile = client.uploadedFiles.create({
             fileName: gcsFileName,
             originalName: file.originalname,
@@ -183,13 +185,15 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
             status: 'admin_sent',
             category: category || 'other',
             adminMessage: message || '',
-            cloudProvider: 'google-cloud',
             cloudPath: gcsFileName,
             cloudUrl: gcsUrl,
             isActive: true,
         });
+
+        // Add the file to the client's record
         client.uploadedFiles.push(newFile);
 
+        // Create the activity log for the new file
         const activityMessage = message ? `Admin sent file: ${file.originalname} - ${message}` : `Admin sent file: ${file.originalname}`;
         client.activityLogs.push({
             type: 'info',
@@ -198,14 +202,28 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
             timestamp: new Date(),
             source: 'admin',
             fileInfo: {
-                fileId: newFile._id,
+                fileId: newFile._id.toString(),
                 fileName: gcsFileName,
                 originalName: file.originalname,
                 category: category || 'other',
+                downloadPath: `/admin/download-file/${newFile._id.toString()}`
             }
         });
 
+        // Save the client with both the new file and the new activity log
         await client.save();
+
+        // Send email notification to the client
+        const subject = `New File Received: ${file.originalname}`;
+        const html = `
+            <p>Hello ${client.name},</p>
+            <p>A new file has been shared with you by the admin in your dashboard.</p>
+            <p><strong>File Name:</strong> ${file.originalname}</p>
+            <p><strong>Message:</strong> ${message || 'No message provided.'}</p>
+            <p>You can view and download the file from the "Activity Monitor" section of your dashboard.</p>
+            <p>Thank you,<br>The Automation Platform Team</p>
+        `;
+        await sendEmail(client.email, subject, html);
 
         console.log(`✅ File sent to GCS for client ${clientId}: ${file.originalname}`);
 
