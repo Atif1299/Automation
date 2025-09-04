@@ -91,6 +91,14 @@ app.get('/auth/admin-login', (req, res) => {
     res.render('auth/admin-login', { title: 'Admin Login', layout: false });
 });
 
+app.get('/auth/forgot-password', (req, res) => {
+    res.render('auth/forgot-password', { title: 'Forgot Password', layout: false });
+});
+
+app.get('/auth/reset-password/:token', (req, res) => {
+    res.render('auth/reset-password', { title: 'Reset Password', layout: false, token: req.params.token });
+});
+
 // Define routes
 const adminRoutes = require('./routes/admin');
 const clientRoutes = require('./routes/client');

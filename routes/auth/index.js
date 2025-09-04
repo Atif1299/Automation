@@ -1,7 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const router = express.Router();
+const ejs = require('ejs');
+const path = require('path');
 const Client = require('../../models/Client');
+const { sendEmail } = require('../../config/email');
 const { 
     generateClientToken, 
     generateAdminToken 
@@ -96,6 +100,77 @@ router.post('/client/register',
         }
     }
 );
+
+// Forgot Password - Step 1: Request password reset
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const client = await Client.findOne({ email });
+
+        if (!client) {
+            // Don't reveal that the user does not exist
+            return res.json({ success: true, message: 'If an account with that email exists, a password reset link has been sent.' });
+        }
+
+        // Generate a reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        client.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        client.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        await client.save();
+
+        // Send the email
+        const resetUrl = `${req.protocol}://${req.get('host')}/auth/reset-password/${resetToken}`;
+        const subject = 'Your Password Reset Request';
+        
+        const emailTemplate = path.join(__dirname, '../../views/emails/passwordReset.ejs');
+        const html = await ejs.renderFile(emailTemplate, { name: client.name, resetUrl });
+
+        await sendEmail(client.email, subject, html);
+
+        res.json({ success: true, message: 'If an account with that email exists, a password reset link has been sent.' });
+
+    } catch (error) {
+        console.error('❌ Forgot password error:', error);
+        res.status(500).json({ error: 'An error occurred while sending the password reset email.' });
+    }
+});
+
+// Forgot Password - Step 2: Reset the password
+router.post('/reset-password/:token', async (req, res) => {
+    try {
+        // Get hashed token
+        const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+        const client = await Client.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!client) {
+            return res.status(400).json({ error: 'Password reset token is invalid or has expired.' });
+        }
+
+        // Set the new password
+        const accountCredential = client.credentials.find(cred => cred.platform === 'account');
+        if (accountCredential) {
+            accountCredential.password = req.body.password;
+        } else {
+            // This case should ideally not happen if the client exists
+            return res.status(500).json({ error: 'Could not find account credentials to update.' });
+        }
+        
+        client.passwordResetToken = undefined;
+        client.passwordResetExpires = undefined;
+        await client.save();
+
+        res.json({ success: true, message: 'Password has been reset successfully.' });
+
+    } catch (error) {
+        console.error('❌ Reset password error:', error);
+        res.status(500).json({ error: 'An error occurred while resetting the password.' });
+    }
+});
 
 // Client Login
 router.post('/client/login',
