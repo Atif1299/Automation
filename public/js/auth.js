@@ -23,7 +23,7 @@ class AuthManager {
 
     setupFormHandlers() {
         // Handle all auth forms
-        const authForms = document.querySelectorAll('#login-form, #register-form');
+        const authForms = document.querySelectorAll('#login-form, #register-form, #forgot-password-form, #reset-password-form');
         authForms.forEach(form => {
             form.addEventListener('submit', (e) => this.handleFormSubmit(e));
         });
@@ -83,6 +83,8 @@ class AuthManager {
         const currentPath = window.location.pathname;
         
         if (formId === 'register-form') return 'register';
+        if (formId === 'forgot-password-form') return 'forgot-password';
+        if (formId === 'reset-password-form') return 'reset-password';
         if (currentPath.includes('admin')) return 'admin';
         return 'client';
     }
@@ -100,6 +102,13 @@ class AuthManager {
             case 'register':
                 endpoint = this.apiEndpoints.clientRegister;
                 break;
+            case 'forgot-password':
+                endpoint = '/auth/forgot-password';
+                break;
+            case 'reset-password':
+                const token = document.getElementById('token').value;
+                endpoint = `/auth/reset-password/${token}`;
+                break;
             default:
                 throw new Error('Unknown form type');
         }
@@ -116,6 +125,19 @@ class AuthManager {
     }
 
     handleSuccess(result, formType, successMessage) {
+        if (formType === 'forgot-password') {
+            this.showSuccess(successMessage, result.message);
+            return;
+        }
+
+        if (formType === 'reset-password') {
+            this.showSuccess(successMessage, result.message + ' Redirecting to login...');
+            setTimeout(() => {
+                window.location.href = '/auth/client-login';
+            }, 2000);
+            return;
+        }
+
         // Store authentication data
         localStorage.setItem('authToken', result.data.token);
         
