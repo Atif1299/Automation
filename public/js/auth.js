@@ -65,7 +65,7 @@ class AuthManager {
             const result = await this.makeAuthRequest(formType, data);
             
             if (result.success) {
-                this.handleSuccess(result, formType, successMessage);
+                this.handleSuccess(result, formType, successMessage, submitButton);
             } else {
                 this.showError(errorMessage, result.error || 'Authentication failed');
             }
@@ -124,7 +124,7 @@ class AuthManager {
         return await response.json();
     }
 
-    handleSuccess(result, formType, successMessage) {
+    handleSuccess(result, formType, successMessage, submitButton) {
         if (formType === 'forgot-password') {
             this.showSuccess(successMessage, result.message);
             return;
@@ -147,8 +147,8 @@ class AuthManager {
             localStorage.setItem('clientId', result.data.clientId);
         }
         
-        // Show success message
-        this.showSuccess(successMessage, 'Authentication successful! Redirecting...');
+        // Change button text to show success
+        submitButton.textContent = 'Redirecting...';
         
         // Redirect after delay
         setTimeout(() => {
