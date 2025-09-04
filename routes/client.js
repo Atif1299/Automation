@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Client = require('../models/Client');
-const { uploadFileToGCS } = require('../config/gcs');
+const { uploadFileToGCS, getSignedUrl } = require('../config/gcs');
 
 // Configure multer to use memory storage, as files will be streamed to GCS
 const clientUpload = multer({ storage: multer.memoryStorage() });
@@ -271,6 +271,29 @@ router.get('/:id/messages-content', async (req, res) => {
     } catch (error) {
         console.error('❌ Error loading messages content:', error);
         res.status(500).json({ error: 'Unable to load messages content' });
+    }
+});
+
+// Download file route for client
+router.get('/download-file/:fileId', async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        const clientWithFile = await Client.findOne({ 'uploadedFiles._id': fileId });
+
+        if (!clientWithFile) {
+            return res.status(404).json({ success: false, message: 'File record not found.' });
+        }
+        const fileRecord = clientWithFile.uploadedFiles.id(fileId);
+
+        if (fileRecord.cloudProvider === 'google-cloud' && fileRecord.fileName) {
+            const signedUrl = await getSignedUrl(fileRecord.fileName);
+            res.redirect(signedUrl);
+        } else {
+            return res.status(404).json({ success: false, message: 'File not found on server.' });
+        }
+    } catch (error) {
+        console.error('❌ Error downloading file for client:', error);
+        res.status(500).json({ success: false, message: 'Error downloading file' });
     }
 });
 

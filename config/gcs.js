@@ -4,7 +4,6 @@ const path = require('path');
 // Initialize Google Cloud Storage
 const storage = new Storage({
     keyFilename: process.env.GCS_KEYFILE,
-    projectId: process.env.GCLOUD_PROJECT,
 });
 
 const bucketName = process.env.GCS_BUCKET_NAME;

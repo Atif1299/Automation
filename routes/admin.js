@@ -225,6 +225,38 @@ router.post('/send-file', adminUpload.single('file'), async (req, res) => {
     }
 });
 
+// GET route to fetch all files from all clients
+router.get('/all-files', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1 || !Client) {
+            return res.status(503).json({ success: false, message: 'Database not available' });
+        }
+
+        const allFiles = await Client.aggregate([
+            { $unwind: '$uploadedFiles' },
+            {
+                $project: {
+                    _id: 0,
+                    clientId: '$clientId',
+                    clientName: '$name',
+                    file: '$uploadedFiles'
+                }
+            },
+            { $sort: { 'file.uploadDate': -1 } }
+        ]);
+
+        res.json({ success: true, files: allFiles });
+
+    } catch (error) {
+        console.error('❌ Error fetching all files:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error while fetching all files',
+            error: error.message 
+        });
+    }
+});
+
 // GET route to search and filter clients
 router.get('/clients', async (req, res) => {
     try {
@@ -403,27 +435,7 @@ router.delete('/clients/:clientId', async (req, res) => {
             });
         }
 
-        // Delete uploaded files from filesystem
-        if (client.uploadedFiles && client.uploadedFiles.length > 0) {
-            const uploadsDir = path.join(__dirname, '../uploads', clientId);
-            
-            if (fs.existsSync(uploadsDir)) {
-                try {
-                    // Delete all files in client directory
-                    const files = fs.readdirSync(uploadsDir);
-                    for (const file of files) {
-                        const filePath = path.join(uploadsDir, file);
-                        fs.unlinkSync(filePath);
-                    }
-                    
-                    // Remove the client directory
-                    fs.rmdirSync(uploadsDir);
-                    console.log(`🗂️ Deleted ${files.length} files and client directory: ${uploadsDir}`);
-                } catch (fileError) {
-                    console.warn(`⚠️ Could not delete client files directory: ${uploadsDir}`, fileError.message);
-                }
-            }
-        }
+        // All files are in GCS, no need to delete from local filesystem.
 
         // Log successful deletion
         console.log(`✅ Client deleted successfully:`, {
@@ -476,7 +488,7 @@ router.get('/download-file/:fileId', async (req, res) => {
         }
         const fileRecord = clientWithFile.uploadedFiles.id(fileId);
 
-        if (fileRecord.cloudProvider === 'google-cloud' && fileRecord.fileName) {
+        if (fileRecord.fileName) {
             // Generate a signed URL for secure, temporary access
             const signedUrl = await getSignedUrl(fileRecord.fileName);
 
@@ -496,14 +508,7 @@ router.get('/download-file/:fileId', async (req, res) => {
             res.setHeader('Content-Type', fileRecord.fileType);
             response.data.pipe(res);
         } else {
-            // Fallback for any files that might still be stored locally
-            console.warn(`⚠️ File ${fileId} is not on GCS. Attempting local fallback.`);
-            const localPath = fileRecord.diskPath || path.join(__dirname, '../uploads', fileRecord.relativePath);
-            if (fs.existsSync(localPath)) {
-                res.download(localPath, fileRecord.originalName);
-            } else {
-                return res.status(404).json({ success: false, message: 'File not found on server.' });
-            }
+            return res.status(404).json({ success: false, message: 'File not found on server.' });
         }
     } catch (error) {
         console.error('❌ Error downloading file:', error);
@@ -522,13 +527,18 @@ router.delete('/delete-file/:fileId', async (req, res) => {
         }
         const fileRecord = clientWithFile.uploadedFiles.id(fileId);
 
-        // Delete from GCS
-        if (fileRecord.cloudProvider === 'google-cloud' && fileRecord.fileName) {
-            await deleteFileFromGCS(fileRecord.fileName);
+        // Attempt to delete from GCS, but don't fail if it's already gone
+        if (fileRecord.fileName) {
+            try {
+                await deleteFileFromGCS(fileRecord.fileName);
+            } catch (gcsError) {
+                // Log the error but don't block the process if the file is just not found
+                console.warn(`Could not delete ${fileRecord.fileName} from GCS. It might already be deleted.`, gcsError.message);
+            }
         }
 
         // Remove from database
-        fileRecord.remove();
+        clientWithFile.uploadedFiles.pull({ _id: fileId });
         await clientWithFile.save();
 
         res.json({ success: true, message: 'File deleted successfully.' });
@@ -549,19 +559,13 @@ router.get('/view-file/:fileId', async (req, res) => {
         }
         const fileRecord = clientWithFile.uploadedFiles.id(fileId);
 
-        if (fileRecord.cloudProvider === 'google-cloud' && fileRecord.fileName) {
+        if (fileRecord.fileName) {
             // Generate a signed URL for secure, temporary access
             const signedUrl = await getSignedUrl(fileRecord.fileName);
             // Redirect the user to the signed URL to view the file
             res.redirect(signedUrl);
         } else {
-            // Fallback for local files
-            const localPath = fileRecord.diskPath || path.join(__dirname, '../uploads', fileRecord.relativePath);
-            if (fs.existsSync(localPath)) {
-                res.sendFile(localPath);
-            } else {
-                return res.status(404).json({ success: false, message: 'File not found on server.' });
-            }
+            return res.status(404).json({ success: false, message: 'File not found on server.' });
         }
     } catch (error) {
         console.error('❌ Error viewing file:', error);
@@ -595,45 +599,8 @@ router.post('/cleanup-files', async (req, res) => {
             for (let i = 0; i < client.uploadedFiles.length; i++) {
                 const file = client.uploadedFiles[i];
                 
-                // Check if file exists on disk
-                let filePath = null;
-                let exists = false;
-                
-                // Try database path first
-                if (file.diskPath && fs.existsSync(file.diskPath)) {
-                    exists = true;
-                    filePath = file.diskPath;
-                } else if (file.relativePath) {
-                    filePath = path.join(__dirname, '../uploads', file.relativePath);
-                    exists = fs.existsSync(filePath);
-                } else {
-                    // Try to find file
-                    const searchResult = await searchFileInDirectories(
-                        path.join(__dirname, '../uploads/admin-files'), 
-                        file.fileName
-                    );
-                    if (searchResult) {
-                        exists = true;
-                        filePath = searchResult;
-                        
-                        // Update database record with correct path
-                        const relativePath = path.relative(path.join(__dirname, '../uploads'), searchResult);
-                        client.uploadedFiles[i].diskPath = searchResult;
-                        client.uploadedFiles[i].relativePath = relativePath;
-                        results.fixedRecords++;
-                    }
-                }
-                
-                if (!exists) {
-                    results.missingFiles.push({
-                        clientId: client.clientId,
-                        fileName: file.fileName,
-                        originalName: file.originalName
-                    });
-                    
-                    // Mark file as inactive instead of deleting
-                    client.uploadedFiles[i].isActive = false;
-                }
+                // This logic is for local file systems and is no longer needed.
+                // GCS file existence should be checked via GCS API if needed.
             }
             
             // Save updated client record
@@ -642,21 +609,7 @@ router.post('/cleanup-files', async (req, res) => {
             }
         }
         
-        // Find orphaned files (files on disk but not in database)
-        const allDiskFiles = await listAllFiles(path.join(__dirname, '../uploads/admin-files'));
-        const allDbFiles = [];
-        
-        for (const client of clients) {
-            for (const file of client.uploadedFiles) {
-                allDbFiles.push(file.fileName);
-            }
-        }
-        
-        for (const diskFile of allDiskFiles) {
-            if (!allDbFiles.includes(diskFile)) {
-                results.orphanedFiles.push(diskFile);
-            }
-        }
+        // This logic is for local file systems and is no longer needed.
         
         console.log('✅ File cleanup completed:', results);
         
