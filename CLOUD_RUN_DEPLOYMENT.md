@@ -73,10 +73,10 @@ app.listen(PORT, '0.0.0.0', () => {
 2. **Create a new project or select existing:**
 ```bash
 # Create new project
-gcloud projects create verba-automation-app --name="Verba Automation"
+gcloud projects create automations-andrea --name="Verba Automation"
 
 # Set as active project
-gcloud config set project verba-automation-app
+gcloud config set project automations-andrea
 ```
 
 3. **Enable required APIs:**
@@ -94,13 +94,13 @@ gcloud services enable containerregistry.googleapis.com
 cd /path/to/your/automation-project
 
 # Build and push the container image
-gcloud builds submit --tag gcr.io/verba-automation-app/automation-website
+gcloud builds submit --tag gcr.io/automations-andrea/automation-website
 ```
 
 2. **Deploy to Cloud Run:**
 ```bash
 gcloud run deploy automation-website \
-    --image gcr.io/verba-automation-app/automation-website \
+    --image gcr.io/automations-andrea/automation-website \
     --platform managed \
     --region us-central1 \
     --allow-unauthenticated \
@@ -120,6 +120,8 @@ gcloud run services update automation-website \
     --update-env-vars MONGODB_URI=your-mongodb-connection-string \
     --update-env-vars JWT_SECRET=your-jwt-secret \
     --update-env-vars SESSION_SECRET=your-session-secret \
+    --update-env-vars GCS_BUCKET_NAME=your-gcs-bucket-name \
+    --update-env-vars GCS_KEYFILE=config/gcs-keyfile.json \
     --region us-central1
 ```
 
@@ -272,6 +274,8 @@ NODE_ENV=production
 MONGODB_URI=your-mongodb-atlas-connection-string
 JWT_SECRET=your-jwt-secret
 SESSION_SECRET=your-session-secret
+GCS_BUCKET_NAME=your-gcs-bucket-name
+GCS_KEYFILE=config/gcs-keyfile.json
 ```
 
 ### Step 5: That's It! 🎉
@@ -297,10 +301,10 @@ jobs:
     - uses: actions/checkout@v2
     - uses: google-github-actions/setup-gcloud@v0
       with:
-        project_id: verba-automation-app
+        project_id: automations-andrea
         service_account_key: ${{ secrets.GCP_SA_KEY }}
-    - run: gcloud builds submit --tag gcr.io/verba-automation-app/automation-website
-    - run: gcloud run deploy automation-website --image gcr.io/verba-automation-app/automation-website --platform managed --region us-central1 --allow-unauthenticated
+    - run: gcloud builds submit --tag gcr.io/automations-andrea/automation-website
+    - run: gcloud run deploy automation-website --image gcr.io/automations-andrea/automation-website --platform managed --region us-central1 --allow-unauthenticated
 ```
 
 ## Final Notes

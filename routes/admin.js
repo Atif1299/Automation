@@ -15,7 +15,7 @@ const adminUpload = multer({
     },
     fileFilter: function (req, file, cb) {
         // Allow most common file types
-        const allowedTypes = /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|csv|zip|rar|mp4|avi|mov)$/i;
+        const allowedTypes = /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|csv|zip|rar|mp4|avi|mov|json)$/i;
         if (allowedTypes.test(file.originalname)) {
             cb(null, true);
         } else {

@@ -29,4 +29,4 @@ temp/
 Thumbs.db
 
 # Google Cloud Keyfile
-config/gcs-key.json
+config/gcs-keyfile.json
