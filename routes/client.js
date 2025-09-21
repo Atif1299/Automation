@@ -289,7 +289,13 @@ router.get('/download-file/:fileId', async (req, res) => {
             const signedUrl = await getSignedUrl(fileRecord.fileName);
             res.redirect(signedUrl);
         } else {
-            return res.status(404).json({ success: false, message: 'File not found on server.' });
+            // Fallback for local files
+            const localPath = fileRecord.diskPath || path.join(__dirname, '../uploads', fileRecord.relativePath);
+            if (fs.existsSync(localPath)) {
+                res.download(localPath, fileRecord.originalName);
+            } else {
+                return res.status(404).json({ success: false, message: 'File not found on server.' });
+            }
         }
     } catch (error) {
         console.error('❌ Error downloading file for client:', error);
